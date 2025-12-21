@@ -1,7 +1,7 @@
 // src/services/api.ts
 import type { Cita } from '../types';
 
-const API_URL = 'http://localhost:3000/api'; // Tu futuro backend
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 export const api = {
   // Obtener citas del mes/día
