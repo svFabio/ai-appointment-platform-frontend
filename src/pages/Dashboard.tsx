@@ -1,88 +1,44 @@
-// src/pages/Dashboard.tsx
-import { useEffect, useState } from 'react';
-import { Sidebar } from '../components/Sidebar';
-import { ValidationCard } from '../components/ValidationCard';
-import { api } from '../services/api'; // Importamos el servicio real
-import type { Cita } from '../types';
+import { Link, Outlet } from 'react-router-dom';
 
-export default function Dashboard() {
-  const [view, setView] = useState<'CALENDAR' | 'VALIDATION'>('VALIDATION');
-  const [citasPendientes, setCitasPendientes] = useState<Cita[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  // 1. CARGAR DATOS DEL BACKEND
-  useEffect(() => {
-    cargarDatos();
-    // Aquí podríamos poner un setInterval para "polling" cada 5 segundos
-    const intervalo = setInterval(cargarDatos, 10000); 
-    return () => clearInterval(intervalo);
-  }, []);
-
-  const cargarDatos = async () => {
-    try {
-      if (view === 'VALIDATION') {
-        const data = await api.obtenerPendientes();
-        setCitasPendientes(data);
-      }
-      // Aquí cargaríamos el calendario si view === 'CALENDAR'
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 2. MANEJAR ACCIONES
-  const handleValidacion = async (id: string, accion: 'APROBAR' | 'RECHAZAR') => {
-    // Optimistic UI: Lo quitamos de la lista antes de que responda el server para que se sienta rápido
-    setCitasPendientes(prev => prev.filter(c => c.id !== id));
-    
-    const exito = await api.validarPago(id, accion);
-    if (!exito) {
-      alert("Error al conectar con el servidor");
-      cargarDatos(); // Revertimos si falló
-    }
-  };
-
+const Dashboard = () => {
   return (
-    <div className="flex min-h-screen bg-slate-50">
-      <Sidebar currentView={view} onChangeView={setView} />
+    <div className="flex h-screen bg-gray-100">
+      
+      {/* --- SIDEBAR --- */}
+      <aside className="w-64 bg-slate-900 text-white flex flex-col shadow-xl">
+         <div className="p-6 text-center border-b border-slate-700">
+             <h2 className="text-2xl font-bold text-blue-400">Citas WA</h2>
+             <p className="text-xs text-gray-400 mt-1">Panel de Control</p>
+         </div>
+         
+         <nav className="flex-1 p-4 space-y-2">
+            {/* 1. HOME (Ruta Raíz) */}
+            <Link to="/" className="flex items-center gap-3 px-4 py-3 bg-slate-800/50 hover:bg-blue-600 rounded transition text-gray-200 hover:text-white">
+               <span>Inicio</span>
+            </Link>
 
-      <main className="flex-1 md:ml-64 p-4 md:p-8 overflow-y-auto">
-        <header className="mb-8 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-slate-800">
-            {view === 'CALENDAR' ? 'Calendario General' : 'Validación de Pagos'}
-          </h1>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></span>
-            <span className="text-sm font-medium text-slate-600">Servidor Conectado</span>
-          </div>
-        </header>
+            {/* 2. CALENDARIO (Abajo de Home) */}
+            <Link to="/calendario" className="flex items-center gap-3 px-4 py-3 bg-slate-800/50 hover:bg-blue-600 rounded transition text-gray-200 hover:text-white">
+               <span>Calendario</span>
+            </Link>
 
-        {loading ? (
-          <div className="text-center py-10 text-slate-400">Cargando datos...</div>
-        ) : (
-          <>
-            {view === 'VALIDATION' && (
-              <div className="max-w-4xl mx-auto">
-                {citasPendientes.length === 0 ? (
-                  <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-300">
-                    <p className="text-slate-400">No hay pagos pendientes por validar</p>
-                  </div>
-                ) : (
-                  citasPendientes.map(cita => (
-                    <ValidationCard key={cita.id} cita={cita} onAction={handleValidacion} />
-                  ))
-                )}
-              </div>
-            )}
+            {/* 3. PAGOS (Abajo de Calendario) */}
+            <Link to="/pagos" className="flex items-center gap-3 px-4 py-3 bg-slate-800/50 hover:bg-blue-600 rounded transition text-gray-200 hover:text-white">
+               <span>Validar Pagos</span>
+            </Link>
+         </nav>
 
-            {view === 'CALENDAR' && (
-              <div className="bg-white p-10 rounded-2xl border border-slate-200 text-center">
-                <p className="text-slate-400">Aquí irá la grilla del calendario (Próximo paso)</p>
-              </div>
-            )}
-          </>
-        )}
+         <div className="p-4 border-t border-slate-800 text-center text-xs text-gray-500">
+            v1.0.0 Beta
+         </div>
+      </aside>
+
+      {/* --- CONTENIDO PRINCIPAL --- */}
+      <main className="flex-1 p-8 overflow-auto">
+        <Outlet />
       </main>
     </div>
   );
-}
+};
+
+export default Dashboard;
