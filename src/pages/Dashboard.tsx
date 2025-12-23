@@ -26,6 +26,11 @@ const Dashboard = () => {
             <Link to="/pagos" className="flex items-center gap-3 px-4 py-3 bg-slate-800/50 hover:bg-blue-600 rounded transition text-gray-200 hover:text-white">
                <span>Validar Pagos</span>
             </Link>
+
+            {/* 4. Vincular QR WA*/}
+            <Link to="/vincular" className="flex items-center gap-3 px-4 py-3 bg-slate-800/50 hover:bg-blue-600 rounded transition text-gray-200 hover:text-white">
+               <span>Vincular WhatsApp</span>
+            </Link>
          </nav>
 
          <div className="p-4 border-t border-slate-800 text-center text-xs text-gray-500">

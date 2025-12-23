@@ -3,6 +3,7 @@ import Dashboard from './pages/Dashboard';
 import Pagos from './pages/Pagos';
 import Calendario from './pages/Calendario';
 import Home from './pages/Home'; // Importamos Home
+import Vincular from './pages/Vincular';
 
 function App() {
   return (
@@ -18,6 +19,9 @@ function App() {
           
           {/* Ruta /pagos -> Muestra Pagos */}
           <Route path="pagos" element={<Pagos />} />
+
+          {/* Ruta /vincular -> Muestra lo del WA goood*/}
+          <Route path="/vincular" element={<Vincular />} />
           
        </Route>
     </Routes>
