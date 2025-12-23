@@ -1,5 +1,4 @@
 // src/pages/Vincular.tsx
-import React from 'react';
 import AdminWhatsapp from '../components/AdminWhatsapp'; // Importamos el componente
 
 const Vincular = () => {
