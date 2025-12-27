@@ -47,59 +47,74 @@ const AdminWhatsapp = () => {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[50vh] bg-gray-50 p-6 font-sans">
-      <h2 className="mb-6 text-2xl font-bold text-gray-800">
-        Estado del Bot WhatsApp
-      </h2>
+    <div className="flex flex-col items-center justify-center min-h-[60vh] bg-gray-50 p-4 sm:p-6 lg:p-8">
+      <div className="w-full max-w-lg">
+        <h2 className="mb-6 text-xl md:text-2xl font-bold text-gray-800 text-center">
+          Estado del Bot WhatsApp
+        </h2>
 
-      <div className="w-full max-w-md p-8 text-center bg-white rounded-xl shadow-lg border border-gray-100">
-        {loading ? (
-          <div className="flex flex-col items-center py-4">
-            <div className="w-10 h-10 mb-4 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-gray-500">Cargando estado...</p>
-          </div>
-        ) : status.conectado ? (
-          // --- CASO 1: CONECTADO (AHORA CON BOTÓN DE SALIR) ---
-          <div className="flex flex-col items-center animate-in fade-in duration-500">
-            <div className="text-6xl mb-4 text-green-500">✅</div>
-            <h3 className="text-xl font-bold text-gray-800">Bot Operativo</h3>
-            <p className="mt-2 text-gray-600 mb-6">El sistema está escuchando mensajes correctamente.</p>
-            
-            <button 
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 sm:p-6 lg:p-8">
+          {loading ? (
+            <div className="flex flex-col items-center py-6">
+              <div className="w-12 h-12 md:w-16 md:h-16 mb-4 border-4 border-kenyan-copper-500 border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-gray-500 text-sm md:text-base">Cargando estado...</p>
+            </div>
+          ) : status.conectado ? (
+            // --- CASO 1: CONECTADO (AHORA CON BOTÓN DE SALIR) ---
+            <div className="flex flex-col items-center animate-in fade-in duration-500">
+              <div className="text-5xl md:text-6xl mb-4 text-green-500">✓</div>
+              <h3 className="text-lg md:text-xl font-bold text-gray-800 mb-2">Bot Operativo</h3>
+              <p className="text-sm md:text-base text-gray-600 mb-6 text-center max-w-md">
+                El sistema está escuchando mensajes correctamente.
+              </p>
+              
+              <button
                 onClick={handleLogout}
                 disabled={procesandoLogout}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
+                className="w-full md:w-auto px-4 py-2.5 text-sm md:text-base font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
                 {procesandoLogout ? 'Desconectando...' : 'Cerrar Sesión / Desvincular'}
-            </button>
-          </div>
-        ) : (
-          // --- CASO 2: DESCONECTADO (MOSTRAR QR) ---
-          <div className="flex flex-col items-center">
-            {status.qr ? (
-              <>
-                <p className="mb-4 text-lg font-semibold text-gray-700">
-                  Escanea para conectar:
-                </p>
-                <div className="p-4 bg-white border-4 border-gray-100 rounded-lg shadow-sm">
-                  <QRCode value={status.qr} size={256} className="h-auto max-w-full" />
-                </div>
-                <p className="mt-4 text-xs text-gray-400">
-                  El QR se actualiza automáticamente.
-                </p>
-              </>
-            ) : (
-              // --- CASO 3: ESPERANDO ---
-              <div className="flex flex-col items-center py-6">
-                <div className="text-4xl mb-4 animate-bounce">⏳</div>
-                <p className="font-medium text-gray-700">Generando código QR...</p>
-                <p className="text-xs text-gray-400 mt-2">
+              </button>
+            </div>
+          ) : (
+            // --- CASO 2: DESCONECTADO (MOSTRAR QR) ---
+            <div className="flex flex-col items-center">
+              {status.qr ? (
+                <>
+                  <p className="mb-4 text-base md:text-lg font-semibold text-gray-700 text-center">
+                    Escanea para conectar:
+                  </p>
+                  <div className="p-3 sm:p-4 bg-white border-2 border-gray-200 rounded-xl shadow-sm mb-4">
+                    <QRCode
+                      value={status.qr}
+                      size={200}
+                      className="h-auto max-w-full w-full"
+                    />
+                  </div>
+                  <p className="text-xs md:text-sm text-gray-400 text-center max-w-sm">
+                    El QR se actualiza automáticamente. Escanéalo con tu WhatsApp.
+                  </p>
+                </>
+              ) : (
+                // --- CASO 3: ESPERANDO ---
+                <div className="flex flex-col items-center py-8">
+                  <div className="text-4xl md:text-5xl mb-4 animate-bounce">⏳</div>
+                  <p className="font-medium text-gray-700 text-center mb-2">
+                    Generando código QR...
+                  </p>
+                  <p className="text-xs md:text-sm text-gray-400 text-center max-w-sm">
                     {procesandoLogout ? "Reiniciando el sistema..." : "Espere un momento..."}
-                </p>
-              </div>
-            )}
-          </div>
-        )}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        
+        {/* Additional Info */}
+        <div className="mt-6 text-center text-xs text-gray-500">
+          <p>Para más ayuda, contacta al administrador del sistema</p>
+        </div>
       </div>
     </div>
   );
