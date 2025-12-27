@@ -55,89 +55,119 @@ const Pagos = () => {
     }
   };
 
-  if (loading) return <div className="p-6 text-center">Cargando pagos pendientes...</div>;
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-kenyan-copper-600 mx-auto"></div>
+        <p className="mt-4 text-gray-600">Cargando pagos pendientes...</p>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <div className="border-b pb-4 mb-4">
-        <h2 className="text-xl font-bold text-slate-800">Validación de Comprobantes</h2>
-        <p className="text-sm text-gray-500">Revisa las fotos enviadas por WhatsApp</p>
+    <div className="bg-white rounded-lg shadow-lg border border-gray-100">
+      {/* Header */}
+      <div className="p-4 md:p-6 border-b border-gray-200">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h2 className="text-xl md:text-2xl font-bold text-gray-800">Validación de Comprobantes</h2>
+            <p className="text-sm text-gray-600 mt-1">Revisa las fotos enviadas por WhatsApp</p>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-1 bg-kenyan-copper-50 text-kenyan-copper-700 rounded-full text-sm font-medium">
+            <span className="w-2 h-2 bg-kenyan-copper-500 rounded-full"></span>
+            {citas.length} pendientes
+          </div>
+        </div>
       </div>
       
-      {citas.length === 0 ? (
-        <div className="py-10 text-center">
-            <p className="text-gray-400">🎉 Todo al día. No hay pagos pendientes de revisión.</p>
-        </div>
-      ) : (
-        <ul className="divide-y divide-gray-100">
-          {citas.map(cita => (
-            <li key={cita.id} className="py-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-              
-              <div className="flex gap-5 items-center">
-                {/* Visualización del Comprobante */}
-                {cita.comprobanteUrl ? (
-                  <a href={cita.comprobanteUrl} target="_blank" rel="noreferrer" className="flex-shrink-0">
-                    <img 
-                      src={cita.comprobanteUrl} 
-                      alt="Comprobante"
-                      className="w-24 h-24 object-cover rounded-lg border-2 border-orange-200 hover:border-orange-500 transition-all cursor-zoom-in shadow-sm" 
-                    />
-                  </a>
-                ) : (
-                  <div className="w-24 h-24 bg-gray-50 rounded-lg flex items-center justify-center text-gray-400 text-[10px] border border-dashed border-gray-300">
-                    SIN FOTO
-                  </div>
-                )}
-
-                <div>
-                  {/* Lógica para mostrar nombre o limpiar el número largo */}
-                  <p className="font-bold text-lg text-slate-800">
-                    {cita.clienteNombre || (
-                        cita.clienteTelefono.length > 15 
-                        ? `📱 ID: ${cita.clienteTelefono.substring(0, 5)}...` 
-                        : `📱 ${cita.clienteTelefono}`
-                    )}
-                  </p>
+      {/* Content */}
+      <div className="p-4 md:p-6">
+        {citas.length === 0 ? (
+          <div className="py-12 text-center">
+            <div className="text-6xl mb-4">✓</div>
+            <p className="text-lg text-gray-600 font-medium">¡Todo al día!</p>
+            <p className="text-sm text-gray-500 mt-2">No hay pagos pendientes de revisión.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {citas.map(cita => (
+              <div key={cita.id} className="bg-gray-50 rounded-xl p-4 md:p-6 hover:bg-white transition-all border border-gray-100">
+                <div className="flex flex-col md:flex-row gap-4 md:gap-6">
                   
-                  <div className="flex flex-col gap-1 mt-1">
-                    <p className="text-sm text-gray-600 flex items-center gap-1">
-                      <span className="font-semibold text-slate-700">Horario:</span> {cita.horario}
-                    </p>
-                    <div className="mt-2">
-                        <span className="text-[10px] px-2 py-1 rounded bg-orange-100 text-orange-700 font-black uppercase tracking-widest">
-                            {cita.estado}
-                        </span>
+                  {/* Comprobante Image */}
+                  <div className="flex-shrink-0">
+                    {cita.comprobanteUrl ? (
+                      <a href={cita.comprobanteUrl} target="_blank" rel="noreferrer" className="block">
+                        <img
+                          src={cita.comprobanteUrl}
+                          alt="Comprobante"
+                          className="w-24 h-24 md:w-32 md:h-32 object-cover rounded-lg border-2 border-orange-200 hover:border-orange-500 transition-all cursor-zoom-in shadow-sm"
+                        />
+                      </a>
+                    ) : (
+                      <div className="w-24 h-24 md:w-32 md:h-32 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-xs border border-dashed border-gray-300">
+                        <div className="text-center">
+                          <div className="text-lg mb-1">📄</div>
+                          <p>SIN FOTO</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-3">
+                      <p className="font-bold text-lg md:text-xl text-gray-800">
+                        {cita.clienteNombre || (
+                            cita.clienteTelefono.length > 15
+                            ? `ID: ${cita.clienteTelefono.substring(0, 5)}...`
+                            : `Tel: ${cita.clienteTelefono}`
+                        )}
+                      </p>
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-800 border border-orange-200">
+                        {cita.estado}
+                      </span>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">Horario:</span> {cita.horario}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-400">Tel:</span>
+                        <span className="font-medium">Teléfono:</span> {cita.clienteTelefono}
+                      </div>
                     </div>
                   </div>
+
+                  {/* Actions */}
+                  <div className="flex flex-col gap-3 md:gap-0 md:flex-row md:items-center md:justify-end md:w-48">
+                    <button
+                      onClick={() => manejarValidacion(cita.id, 'CONFIRMAR')}
+                      disabled={!cita.comprobanteUrl}
+                      className={`w-full md:w-auto px-4 py-2.5 rounded-lg font-bold transition-all ${
+                        cita.comprobanteUrl
+                        ? 'bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-xl active:scale-95'
+                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      }`}
+                    >
+                      Aprobar
+                    </button>
+                    
+                    <button
+                      onClick={() => manejarValidacion(cita.id, 'RECHAZAR')}
+                      className="w-full md:w-auto px-4 py-2.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 font-bold transition-all hover:shadow-md active:scale-95"
+                    >
+                      Rechazar
+                    </button>
+                  </div>
+
                 </div>
               </div>
-
-              {/* Botones */}
-              <div className="flex gap-3 w-full md:w-auto">
-                <button 
-                  onClick={() => manejarValidacion(cita.id, 'CONFIRMAR')}
-                  disabled={!cita.comprobanteUrl}
-                  className={`flex-1 md:flex-none px-6 py-2.5 rounded-lg shadow-sm text-white font-bold transition-all ${
-                    cita.comprobanteUrl 
-                    ? 'bg-green-600 hover:bg-green-700 active:scale-95' 
-                    : 'bg-gray-300 cursor-not-allowed'
-                  }`}
-                >
-                  Aprobar
-                </button>
-                
-                <button 
-                  onClick={() => manejarValidacion(cita.id, 'RECHAZAR')}
-                  className="flex-1 md:flex-none px-6 py-2.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 font-bold transition-all active:scale-95"
-                >
-                  Rechazar
-                </button>
-              </div>
-
-            </li>
-          ))}
-        </ul>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
