@@ -43,6 +43,7 @@ interface RecursoEvento {
   estado?: string;
   telefono?: string;
   tipo?: 'resumen' | 'cita';
+  count?: number; // Agregado para contar citas en vista mes
 }
 
 interface EventoCalendario {
@@ -70,13 +71,13 @@ const ModalDetalle = ({ event, onClose }: { event: EventoCalendario | null, onCl
   const statusClass = getStatusColor(event.resource?.estado);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm border border-slate-100 overflow-hidden animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm border border-slate-100 overflow-hidden animate-modal-pop">
         {/* Header del Modal */}
         <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50/50">
           <h3 className="font-bold text-lg text-slate-800">Detalles de la Cita</h3>
-          <button onClick={onClose} className="p-1 hover:bg-slate-200 rounded-full transition-colors">
-            <X className="w-5 h-5 text-slate-500 " />
+          <button onClick={onClose} className="p-1 hover:bg-slate-200 rounded-full transition-colors hover:rotate-90 duration-300">
+            <X className="w-5 h-5 text-slate-500" />
           </button>
         </div>
 
@@ -136,7 +137,7 @@ const ModalDetalle = ({ event, onClose }: { event: EventoCalendario | null, onCl
         <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
           <button 
             onClick={onClose}
-            className="px-4 py-2 bg-slate-800 text-white font-medium rounded-lg hover:bg-slate-900 transition-colors shadow-lg shadow-slate-200"
+            className="px-4 py-2 bg-slate-800 text-white font-medium rounded-lg hover:bg-slate-900 transition-all hover:scale-105 active:scale-95 shadow-lg shadow-slate-200"
           >
             Cerrar
           </button>
@@ -148,7 +149,7 @@ const ModalDetalle = ({ event, onClose }: { event: EventoCalendario | null, onCl
 
 // --- 4. Componentes Visuales del Calendario ---
 
-// Tarjeta de Cita (Vista Agenda/Día) - AHORA SOLO MUESTRA NOMBRE
+// Tarjeta de Cita (Vista Agenda/Día)
 const CustomEventDay = ({ event }: { event: EventoCalendario }) => {
   const { title, resource } = event;
   
@@ -162,8 +163,7 @@ const CustomEventDay = ({ event }: { event: EventoCalendario }) => {
   };
 
   return (
-    <div className="flex flex-col h-full justify-center px-2">
-      {/* SIMPLIFICADO: Solo Icono y Nombre. Nada más. */}
+    <div className="flex flex-col h-full justify-center px-2 hover:bg-slate-50/50 transition-colors rounded">
       <div className="flex items-center gap-1.5">
         {getIcon()}
         <span className="text-xs font-bold truncate leading-tight text-slate-700">
@@ -174,13 +174,27 @@ const CustomEventDay = ({ event }: { event: EventoCalendario }) => {
   );
 };
 
-// Chip de Resumen (Vista Mes)
+// Chip de Resumen (Vista Mes) - RESPONSIVE MEJORADO (Puntitos vs Texto)
 const CustomEventMonth = ({ event }: { event: EventoCalendario }) => {
+  const count = event.resource?.count || 0;
+
   return (
     <div className="flex items-center justify-center h-full w-full">
-      <span className="text-xs font-semibold tracking-wide">
+      {/* VISTA ESCRITORIO (md:block): Texto normal */}
+      <span className="hidden md:block text-xs font-semibold tracking-wide truncate px-1">
         {event.title}
       </span>
+
+      {/* VISTA MÓVIL (md:hidden): Puntitos */}
+      <div className="md:hidden flex items-center justify-center gap-0.5 flex-wrap px-0.5 h-full content-center">
+        {Array.from({ length: Math.min(count, 4) }).map((_, i) => (
+          <div 
+            key={i} 
+            className="w-1.5 h-1.5 rounded-full bg-blue-600 shadow-sm"
+          />
+        ))}
+        {count > 4 && <span className="text-[10px] text-blue-600 font-bold leading-none">+</span>}
+      </div>
     </div>
   );
 };
@@ -191,13 +205,13 @@ const CustomToolbar = ({ onNavigate, onView, view, label }: any) => {
     <div className="flex flex-col md:flex-row items-center justify-between mb-4 pb-4 border-b border-slate-200 gap-4">
       <div className="flex items-center gap-2">
         <div className="flex items-center bg-white rounded-lg border border-slate-200 shadow-sm p-1">
-          <button onClick={() => onNavigate('PREV')} className="p-1.5 hover:bg-slate-100 rounded-md text-slate-600">
+          <button onClick={() => onNavigate('PREV')} className="p-1.5 hover:bg-slate-100 rounded-md text-slate-600 transition-colors">
             <ChevronLeft className="w-5 h-5" />
           </button>
-          <button onClick={() => onNavigate('TODAY')} className="px-3 py-1 text-sm font-bold text-slate-700 hover:bg-slate-100 rounded-md mx-1">
+          <button onClick={() => onNavigate('TODAY')} className="px-3 py-1 text-sm font-bold text-slate-700 hover:bg-slate-100 rounded-md mx-1 transition-colors">
             Hoy
           </button>
-          <button onClick={() => onNavigate('NEXT')} className="p-1.5 hover:bg-slate-100 rounded-md text-slate-600">
+          <button onClick={() => onNavigate('NEXT')} className="p-1.5 hover:bg-slate-100 rounded-md text-slate-600 transition-colors">
             <ChevronRight className="w-5 h-5" />
           </button>
         </div>
@@ -229,8 +243,6 @@ const CalendarioFinal = () => {
   
   const [fecha, setFecha] = useState(new Date());
   const [vista, setVista] = useState<View>(Views.MONTH);
-  
-  // Estado para el Modal
   const [citaSeleccionada, setCitaSeleccionada] = useState<EventoCalendario | null>(null);
 
   // --- Fetch del Backend ---
@@ -269,7 +281,8 @@ const CalendarioFinal = () => {
           start,
           end: new Date(start),
           allDay: true,
-          resource: { tipo: 'resumen' as const, estado: 'INFO' }
+          // Pasamos el "count" para los puntitos
+          resource: { tipo: 'resumen' as const, estado: 'INFO', count: count }
         };
       });
     }
@@ -356,7 +369,6 @@ const CalendarioFinal = () => {
       setFecha(event.start);
       setVista(Views.DAY);
     } else {
-      // SI ES VISTA DE DÍA: ABRIMOS EL MODAL
       if(event.resource?.tipo === 'cita') {
         setCitaSeleccionada(event);
       }
@@ -366,7 +378,7 @@ const CalendarioFinal = () => {
   return (
     <div className="h-full w-full bg-slate-50 p-4 md:p-6 font-sans relative">
       
-      {/* --- RENDERIZADO DEL MODAL --- */}
+      {/* Modal */}
       {citaSeleccionada && (
         <ModalDetalle 
           event={citaSeleccionada} 
@@ -374,7 +386,11 @@ const CalendarioFinal = () => {
         />
       )}
 
-      <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 p-6 h-[85vh] flex flex-col border border-slate-100">
+      {/* Contenedor Calendario con key para reinicio de animación */}
+      <div 
+        key={vista} 
+        className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 p-6 h-[85vh] flex flex-col border border-slate-100 animate-tab-change"
+      >
         <Calendar
           culture='es'
           localizer={localizer}
@@ -441,8 +457,6 @@ const CalendarioFinal = () => {
         .rbc-time-gutter .rbc-timeslot-group { border-bottom: none; }
         .rbc-current-time-indicator { background-color: #f43f5e; }
         .rbc-event { background: none !important; padding: 0 !important; }
-        
-        /* Ocultar el texto de la hora que pone la librería automáticamente */
         .rbc-event-label { display: none !important; }
       `}</style>
     </div>
