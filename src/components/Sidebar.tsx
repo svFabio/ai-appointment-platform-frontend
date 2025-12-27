@@ -1,46 +1,76 @@
-import { Calendar, CheckSquare, LayoutDashboard } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { X, LayoutDashboard, Calendar, CheckSquare, Smartphone } from 'lucide-react';
 
-interface Props {
-  currentView: 'CALENDAR' | 'VALIDATION';
-  onChangeView: (view: 'CALENDAR' | 'VALIDATION') => void;
+// Definimos qué propiedades recibe este componente
+interface SidebarProps {
+  isOpen: boolean;      // ¿Está abierto en móvil?
+  onClose: () => void;  // Función para cerrarlo
 }
 
-export function Sidebar({ currentView, onChangeView }: Props) {
+export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
+  const location = useLocation(); // Hook para saber en qué URL estamos
+
+  // Función auxiliar para saber si un link está activo
+  const isActive = (path: string) => location.pathname === path;
+
+  // Clases base para los links
+  const linkClass = (path: string) => `
+    flex items-center gap-3 px-4 py-3 rounded transition-all duration-200
+    ${isActive(path) 
+      ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50' // Estilo Activo
+      : 'text-gray-400 hover:bg-slate-800 hover:text-white'   // Estilo Inactivo
+    }
+  `;
+
   return (
-    <aside className="hidden md:flex flex-col w-64 bg-slate-900 text-white h-screen fixed left-0 top-0 p-4">
-      <div className="mb-8 px-2 flex items-center gap-2">
-        <LayoutDashboard className="text-blue-500" />
-        <div>
-          <h1 className="text-xl font-bold tracking-tight">Citas WA</h1>
-          <p className="text-slate-400 text-xs">Admin Panel</p>
-        </div>
+    <aside className={`
+      fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white flex flex-col shadow-xl 
+      transition-transform duration-300 ease-in-out
+      md:static md:translate-x-0 
+      ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+    `}>
+      {/* Botón X para cerrar (Solo visible en celular) */}
+      <div className="md:hidden absolute top-4 right-4">
+        <button onClick={onClose} className="p-1 hover:bg-slate-800 rounded-full transition-colors">
+          <X className="w-6 h-6 text-gray-400 hover:text-white" />
+        </button>
       </div>
 
-      <nav className="space-y-2">
-        <button
-          onClick={() => onChangeView('VALIDATION')}
-          className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-            currentView === 'VALIDATION' 
-              ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50' 
-              : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-          }`}
-        >
-          <CheckSquare size={20} />
-          <span className="font-medium">Validar Pagos</span>
-        </button>
+      {/* Header del Sidebar */}
+      <div className="p-6 text-center border-b border-slate-800 mt-8 md:mt-0">
+        <h2 className="text-2xl font-bold text-blue-400 tracking-tight">Citas WA</h2>
+        <p className="text-xs text-gray-500 mt-1 uppercase tracking-wider">Panel de Control</p>
+      </div>
 
-        <button
-          onClick={() => onChangeView('CALENDAR')}
-          className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-            currentView === 'CALENDAR' 
-              ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50' 
-              : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-          }`}
-        >
+      {/* Navegación */}
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+        
+        <Link to="/" onClick={onClose} className={linkClass('/')}>
+          <LayoutDashboard size={20} />
+          <span className="font-medium">Inicio</span>
+        </Link>
+
+        <Link to="/calendario" onClick={onClose} className={linkClass('/calendario')}>
           <Calendar size={20} />
           <span className="font-medium">Calendario</span>
-        </button>
+        </Link>
+
+        <Link to="/pagos" onClick={onClose} className={linkClass('/pagos')}>
+          <CheckSquare size={20} />
+          <span className="font-medium">Validar Pagos</span>
+        </Link>
+
+        <Link to="/vincular" onClick={onClose} className={linkClass('/vincular')}>
+          <Smartphone size={20} />
+          <span className="font-medium">Vincular WhatsApp</span>
+        </Link>
+
       </nav>
+
+      {/* Footer */}
+      <div className="p-4 border-t border-slate-800 text-center text-xs text-gray-600 font-mono">
+        v1.0.0 PRO
+      </div>
     </aside>
   );
-}
+};
