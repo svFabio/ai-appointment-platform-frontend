@@ -3,6 +3,7 @@ import { Calendar, dateFnsLocalizer, Views } from 'react-big-calendar';
 import type { View, Components } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { io } from 'socket.io-client'; 
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -43,7 +44,7 @@ interface RecursoEvento {
   estado?: string;
   telefono?: string;
   tipo?: 'resumen' | 'cita';
-  count?: number; // Agregado para contar citas en vista mes
+  count?: number; 
 }
 
 interface EventoCalendario {
@@ -55,7 +56,7 @@ interface EventoCalendario {
   resource?: RecursoEvento;
 }
 
-// --- 3. Componente MODAL (Ventana de Detalles) ---
+// --- 3. Componente MODAL ---
 const ModalDetalle = ({ event, onClose }: { event: EventoCalendario | null, onClose: () => void }) => {
   if (!event) return null;
 
@@ -73,7 +74,6 @@ const ModalDetalle = ({ event, onClose }: { event: EventoCalendario | null, onCl
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm border border-slate-100 overflow-hidden animate-modal-pop">
-        {/* Header del Modal */}
         <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50/50">
           <h3 className="font-bold text-lg text-slate-800">Detalles de la Cita</h3>
           <button onClick={onClose} className="p-1 hover:bg-slate-200 rounded-full transition-colors hover:rotate-90 duration-300">
@@ -81,10 +81,7 @@ const ModalDetalle = ({ event, onClose }: { event: EventoCalendario | null, onCl
           </button>
         </div>
 
-        {/* Contenido */}
         <div className="p-5 space-y-4">
-          
-          {/* Nombre */}
           <div className="flex items-start gap-3">
             <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600">
               <User className="w-5 h-5" />
@@ -95,7 +92,6 @@ const ModalDetalle = ({ event, onClose }: { event: EventoCalendario | null, onCl
             </div>
           </div>
 
-          {/* Teléfono */}
           <div className="flex items-start gap-3">
             <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
               <Phone className="w-5 h-5" />
@@ -106,7 +102,6 @@ const ModalDetalle = ({ event, onClose }: { event: EventoCalendario | null, onCl
             </div>
           </div>
 
-          {/* Hora */}
           <div className="flex items-start gap-3">
             <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
               <Timer className="w-5 h-5" />
@@ -123,7 +118,6 @@ const ModalDetalle = ({ event, onClose }: { event: EventoCalendario | null, onCl
             </div>
           </div>
 
-          {/* Estado Badge */}
           <div className={`mt-4 p-3 rounded-xl border ${statusClass} flex items-center justify-center gap-2`}>
             {event.resource?.estado === 'CONFIRMADA' && <CheckCircle2 className="w-5 h-5" />}
             {event.resource?.estado === 'VALIDAR' && <AlertCircle className="w-5 h-5" />}
@@ -133,7 +127,6 @@ const ModalDetalle = ({ event, onClose }: { event: EventoCalendario | null, onCl
 
         </div>
 
-        {/* Footer */}
         <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
           <button 
             onClick={onClose}
@@ -148,11 +141,8 @@ const ModalDetalle = ({ event, onClose }: { event: EventoCalendario | null, onCl
 };
 
 // --- 4. Componentes Visuales del Calendario ---
-
-// Tarjeta de Cita (Vista Agenda/Día)
 const CustomEventDay = ({ event }: { event: EventoCalendario }) => {
   const { title, resource } = event;
-  
   const getIcon = () => {
     switch(resource?.estado) {
       case 'CONFIRMADA': return <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />;
@@ -161,7 +151,6 @@ const CustomEventDay = ({ event }: { event: EventoCalendario }) => {
       default: return <CalendarIcon className="w-3.5 h-3.5 text-indigo-500" />;
     }
   };
-
   return (
     <div className="flex flex-col h-full justify-center px-2 hover:bg-slate-50/50 transition-colors rounded">
       <div className="flex items-center gap-1.5">
@@ -174,24 +163,16 @@ const CustomEventDay = ({ event }: { event: EventoCalendario }) => {
   );
 };
 
-// Chip de Resumen (Vista Mes) - RESPONSIVE MEJORADO (Puntitos vs Texto)
 const CustomEventMonth = ({ event }: { event: EventoCalendario }) => {
   const count = event.resource?.count || 0;
-
   return (
     <div className="flex items-center justify-center h-full w-full">
-      {/* VISTA ESCRITORIO (md:block): Texto normal */}
       <span className="hidden md:block text-xs font-semibold tracking-wide truncate px-1">
         {event.title}
       </span>
-
-      {/* VISTA MÓVIL (md:hidden): Puntitos */}
       <div className="md:hidden flex items-center justify-center gap-0.5 flex-wrap px-0.5 h-full content-center">
         {Array.from({ length: Math.min(count, 4) }).map((_, i) => (
-          <div 
-            key={i} 
-            className="w-1.5 h-1.5 rounded-full bg-blue-600 shadow-sm"
-          />
+          <div key={i} className="w-1.5 h-1.5 rounded-full bg-blue-600 shadow-sm" />
         ))}
         {count > 4 && <span className="text-[10px] text-blue-600 font-bold leading-none">+</span>}
       </div>
@@ -199,7 +180,6 @@ const CustomEventMonth = ({ event }: { event: EventoCalendario }) => {
   );
 };
 
-// Toolbar Profesional
 const CustomToolbar = ({ onNavigate, onView, view, label }: any) => {
   return (
     <div className="flex flex-col md:flex-row items-center justify-between mb-4 pb-4 border-b border-slate-200 gap-4">
@@ -245,31 +225,55 @@ const CalendarioFinal = () => {
   const [vista, setVista] = useState<View>(Views.MONTH);
   const [citaSeleccionada, setCitaSeleccionada] = useState<EventoCalendario | null>(null);
 
-  // --- Fetch del Backend ---
-  useEffect(() => {
-    setLoading(true);
-    fetch(`${import.meta.env.VITE_API_URL}/citas/agenda`)
+  // --- 5.1 FUNCIÓN DE CARGA (Extraída para reusar) ---
+  const cargarAgenda = useCallback((silencioso = false) => {
+    if (!silencioso) setLoading(true); // Solo muestra carga la primera vez
+    
+    fetch(`${import.meta.env.VITE_API_URL}/citas`) // NOTA: Verificamos la ruta
       .then((res) => res.ok ? res.json() : [])
       .then((data) => setDataRaw(Array.isArray(data) ? data : []))
-      .catch(() => {
-        console.warn("Error API, usando datos mock");
-        setDataRaw([
-          { id: 1, clienteNombre: 'María Cliente', clienteTelefono: '77112233', fecha: new Date().toISOString().split('T')[0], horario: '09:00', estado: 'CONFIRMADA' },
-          { id: 2, clienteNombre: 'Fabio Salguero', clienteTelefono: '60554433', fecha: new Date().toISOString().split('T')[0], horario: '13:00', estado: 'VALIDAR' },
-          { id: 3, clienteNombre: 'Octavio Salguero', clienteTelefono: '70010020', fecha: new Date().toISOString().split('T')[0], horario: '16:00', estado: 'PENDIENTE_PAGO' },
-        ]);
+      .catch((err) => {
+        console.warn("Error API", err);
       })
       .finally(() => setLoading(false));
   }, []);
 
-  // --- Procesamiento de Eventos ---
+  // --- 5.2 USE EFFECT CON SOCKETS ---
+  useEffect(() => {
+    // 1. Carga inicial
+    cargarAgenda();
+
+    // 2. Conexión WebSocket
+    // Importante: El socket se conecta a la raíz (ej: localhost:3000), no a /api
+    const urlBase = import.meta.env.VITE_API_URL.replace('/api', ''); 
+    const socket = io(urlBase);
+
+    socket.on('connect', () => {
+      console.log('Frontend conectado al Socket');
+    });
+
+    // 3. ESCUCHAR CAMBIOS DEL BACKEND
+    socket.on('cambio-citas', () => {
+      console.log('Cambio detectado en citas -> Recargando agenda...');
+      cargarAgenda(true); // True = recarga silenciosa (sin pantalla de carga)
+    });
+
+    // Limpieza al salir
+    return () => {
+      socket.disconnect();
+    };
+  }, [cargarAgenda]);
+
+
+  // --- Procesamiento de Eventos (Igual que antes) ---
   const eventos = useMemo((): EventoCalendario[] => {
-    if (loading) return [];
+    if (loading && dataRaw.length === 0) return [];
 
     if (vista === Views.MONTH) {
       const countByDate: Record<string, number> = {};
       dataRaw.forEach(c => {
-        const d = c.fecha.split('T')[0];
+        // Aseguramos formato fecha válido
+        const d = c.fecha.toString().split('T')[0];
         countByDate[d] = (countByDate[d] || 0) + 1;
       });
 
@@ -281,14 +285,14 @@ const CalendarioFinal = () => {
           start,
           end: new Date(start),
           allDay: true,
-          // Pasamos el "count" para los puntitos
           resource: { tipo: 'resumen' as const, estado: 'INFO', count: count }
         };
       });
     }
 
     return dataRaw.map(cita => {
-      const start = new Date(`${cita.fecha.split('T')[0]}T${cita.horario}:00`);
+      const datePart = cita.fecha.toString().split('T')[0];
+      const start = new Date(`${datePart}T${cita.horario}:00`);
       const end = new Date(start.getTime() + 60 * 60000); 
       return {
         id: cita.id.toString(),
@@ -306,45 +310,22 @@ const CalendarioFinal = () => {
 
   const eventPropGetter = useCallback((event: EventoCalendario) => {
     const style: React.CSSProperties = {
-      border: 'none',
-      borderRadius: '6px',
-      fontSize: '12px',
-      boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-      outline: 'none',
-      color: '#334155'
+      border: 'none', borderRadius: '6px', fontSize: '12px',
+      boxShadow: '0 1px 2px rgba(0,0,0,0.05)', outline: 'none', color: '#334155'
     };
 
     if (event.resource?.tipo === 'resumen') {
       return {
-        style: {
-          ...style,
-          backgroundColor: '#eff6ff', 
-          color: '#2563eb',          
-          textAlign: 'center' as const,
-          border: '1px solid #dbeafe',
-          fontWeight: '600'
-        }
+        style: { ...style, backgroundColor: '#eff6ff', color: '#2563eb', textAlign: 'center' as const, border: '1px solid #dbeafe', fontWeight: '600' }
       };
     }
 
     switch (event.resource?.estado) {
-      case 'PENDIENTE_PAGO':
-        style.backgroundColor = '#f8fafc';
-        style.borderLeft = '3px solid #94a3b8';
-        break;
-      case 'VALIDAR':
-        style.backgroundColor = '#fffbeb'; 
-        style.borderLeft = '3px solid #f59e0b';
-        break;
-      case 'CONFIRMADA':
-        style.backgroundColor = '#ecfdf5'; 
-        style.borderLeft = '3px solid #10b981'; 
-        break;
-      default:
-        style.backgroundColor = '#f1f5f9';
-        style.borderLeft = '3px solid #cbd5e1';
+      case 'PENDIENTE_PAGO': style.backgroundColor = '#f8fafc'; style.borderLeft = '3px solid #94a3b8'; break;
+      case 'VALIDAR': style.backgroundColor = '#fffbeb'; style.borderLeft = '3px solid #f59e0b'; break;
+      case 'CONFIRMADA': style.backgroundColor = '#ecfdf5'; style.borderLeft = '3px solid #10b981'; break;
+      default: style.backgroundColor = '#f1f5f9'; style.borderLeft = '3px solid #cbd5e1';
     }
-
     return { style };
   }, []);
 
@@ -356,7 +337,6 @@ const CalendarioFinal = () => {
     },
   }), [vista]);
 
-  // --- Handlers ---
   const onSelectSlot = (slotInfo: any) => {
     if (vista === Views.MONTH && slotInfo.action === 'click') {
       setFecha(slotInfo.start);
@@ -369,86 +349,38 @@ const CalendarioFinal = () => {
       setFecha(event.start);
       setVista(Views.DAY);
     } else {
-      if(event.resource?.tipo === 'cita') {
-        setCitaSeleccionada(event);
-      }
+      if(event.resource?.tipo === 'cita') setCitaSeleccionada(event);
     }
   };
 
   return (
     <div className="h-full w-full bg-slate-50 p-4 md:p-6 font-sans relative">
-      
-      {/* Modal */}
       {citaSeleccionada && (
-        <ModalDetalle 
-          event={citaSeleccionada} 
-          onClose={() => setCitaSeleccionada(null)} 
-        />
+        <ModalDetalle event={citaSeleccionada} onClose={() => setCitaSeleccionada(null)} />
       )}
-
-      {/* Contenedor Calendario con key para reinicio de animación */}
-      <div 
-        key={vista} 
-        className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 p-6 h-[85vh] flex flex-col border border-slate-100 animate-tab-change"
-      >
+      <div key={vista} className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 p-6 h-[85vh] flex flex-col border border-slate-100 animate-tab-change">
         <Calendar
-          culture='es'
-          localizer={localizer}
-          events={eventos}
-          startAccessor="start"
-          endAccessor="end"
-          style={{ height: '100%' }}
-          
-          views={[Views.MONTH, Views.DAY]}
-          view={vista}
-          onView={setVista}
-          
-          date={fecha}
-          onNavigate={setFecha}
-          selectable={true}
-          onSelectEvent={onSelectEvent}
-          onSelectSlot={onSelectSlot}
-          components={components}
-          eventPropGetter={eventPropGetter}
-          
+          culture='es' localizer={localizer} events={eventos}
+          startAccessor="start" endAccessor="end" style={{ height: '100%' }}
+          views={[Views.MONTH, Views.DAY]} view={vista} onView={setVista}
+          date={fecha} onNavigate={setFecha} selectable={true}
+          onSelectEvent={onSelectEvent} onSelectSlot={onSelectSlot}
+          components={components} eventPropGetter={eventPropGetter}
           messages={{
-            allDay: 'Todo el día',
-            previous: 'Anterior',
-            next: 'Siguiente',
-            today: 'Hoy',
-            month: 'Mes',
-            day: 'Día',
-            date: 'Fecha',
-            time: 'Hora',
-            event: 'Evento',
-            noEventsInRange: 'Sin citas agendadas',
-            showMore: total => `+${total} más`
+            allDay: 'Todo el día', previous: 'Anterior', next: 'Siguiente', today: 'Hoy',
+            month: 'Mes', day: 'Día', date: 'Fecha', time: 'Hora', event: 'Evento',
+            noEventsInRange: 'Sin citas agendadas', showMore: total => `+${total} más`
           }}
-          
-          min={new Date(0, 0, 0, 8, 0, 0)}
-          max={new Date(0, 0, 0, 21, 0, 0)}
+          min={new Date(0, 0, 0, 8, 0, 0)} max={new Date(0, 0, 0, 21, 0, 0)}
         />
       </div>
-
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        
         .rbc-calendar { font-family: 'Inter', sans-serif; color: #334155; }
-        .rbc-header {
-          padding: 12px 0; font-size: 0.75rem; font-weight: 700; color: #94a3b8;
-          border-bottom: 1px solid #f1f5f9 !important; text-transform: uppercase; letter-spacing: 0.05em;
-        }
-        .rbc-date-cell {
-          display: flex !important; justify-content: center !important;
-          padding: 8px 0 !important; font-size: 0.9rem; font-weight: 500; color: #64748b;
-        }
+        .rbc-header { padding: 12px 0; font-size: 0.75rem; font-weight: 700; color: #94a3b8; border-bottom: 1px solid #f1f5f9 !important; text-transform: uppercase; letter-spacing: 0.05em; }
+        .rbc-date-cell { display: flex !important; justify-content: center !important; padding: 8px 0 !important; font-size: 0.9rem; font-weight: 500; color: #64748b; }
         .rbc-today { background-color: transparent !important; }
-        .rbc-now .rbc-button-link {
-          background: #4f46e5; color: white; width: 32px; height: 32px;
-          display: flex; align-items: center; justify-content: center;
-          border-radius: 8px; margin: 0 auto !important;
-          box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.4); font-weight: 700;
-        }
+        .rbc-now .rbc-button-link { background: #4f46e5; color: white; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px; margin: 0 auto !important; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.4); font-weight: 700; }
         .rbc-month-view, .rbc-time-view { border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; }
         .rbc-day-bg + .rbc-day-bg { border-left: 1px solid #f1f5f9; }
         .rbc-month-row + .rbc-month-row { border-top: 1px solid #f1f5f9; }
