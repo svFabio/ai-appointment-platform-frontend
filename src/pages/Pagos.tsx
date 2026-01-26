@@ -1,57 +1,32 @@
-import { useState, useEffect } from 'react';
+import { usePendientes, useValidarPago } from '../hooks/useCitas';
 
 interface Cita {
   id: number;
   clienteNombre: string | null;
   clienteTelefono: string;
   fecha: string;
-  horario: string; 
+  horario: string;
   estado: string;
   comprobanteUrl: string | null;
 }
 
 const Pagos = () => {
-  const [citas, setCitas] = useState<Cita[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  // 1. Cargar citas pendientes
-  useEffect(() => {
-    // Asegúrate de que VITE_API_URL sea 'http://localhost:3000/api'
-    fetch(`${import.meta.env.VITE_API_URL}/citas/pendientes`)
-      .then(res => res.json())
-      .then(data => {
-        setCitas(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error("Error cargando pagos:", err);
-        setLoading(false);
-      });
-  }, []);
+  // Usamos los hooks de React Query
+  const { data: citas = [], isLoading: loading } = usePendientes();
+  const { mutateAsync: validarPago } = useValidarPago();
 
   // 2. Función para Validar
   const manejarValidacion = async (id: number, accion: 'CONFIRMAR' | 'RECHAZAR') => {
+    // Nota: window.confirm bloquea el hilo, mejor usar un modal custom o confiar en el usuario.
+    // Para simplificar, lo mantenemos o lo quitamos según preferencia.
     const confirmacion = window.confirm(`¿Estás seguro de ${accion === 'CONFIRMAR' ? 'APROBAR' : 'RECHAZAR'} este pago?`);
     if (!confirmacion) return;
 
     try {
-      // Esta ruta ahora sí existe en el backend
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/citas/${id}/validar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accion })
-      });
-
-      if (res.ok) {
-        setCitas(prev => prev.filter(c => c.id !== id));
-      } else {
-        const errorText = await res.text();
-        console.error("Error del servidor:", errorText);
-        alert("Error en el servidor. Revisa la consola.");
-      }
+      // El hook maneja el toast de éxito/error y la invalidación de queries
+      await validarPago({ id: id.toString(), accion });
     } catch (err) {
       console.error(err);
-      alert("Error de conexión con el servidor");
     }
   };
 
@@ -79,7 +54,7 @@ const Pagos = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Content */}
       <div className="p-4 md:p-6">
         {citas.length === 0 ? (
@@ -93,7 +68,7 @@ const Pagos = () => {
             {citas.map(cita => (
               <div key={cita.id} className="bg-gray-50 rounded-xl p-4 md:p-6 hover:bg-white transition-all border border-gray-100">
                 <div className="flex flex-col md:flex-row gap-4 md:gap-6">
-                  
+
                   {/* Comprobante Image */}
                   <div className="flex-shrink-0">
                     {cita.comprobanteUrl ? (
@@ -119,7 +94,7 @@ const Pagos = () => {
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-3">
                       <p className="font-bold text-lg md:text-xl text-gray-800">
                         {cita.clienteNombre || (
-                            cita.clienteTelefono.length > 15
+                          cita.clienteTelefono.length > 15
                             ? `ID: ${cita.clienteTelefono.substring(0, 5)}...`
                             : `Tel: ${cita.clienteTelefono}`
                         )}
@@ -128,7 +103,7 @@ const Pagos = () => {
                         {cita.estado}
                       </span>
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600">
                       <div className="flex items-center gap-2">
                         <span className="font-medium">Horario:</span> {cita.horario}
@@ -145,15 +120,14 @@ const Pagos = () => {
                     <button
                       onClick={() => manejarValidacion(cita.id, 'CONFIRMAR')}
                       disabled={!cita.comprobanteUrl}
-                      className={`w-full md:w-auto px-4 py-2.5 rounded-lg font-bold transition-all ${
-                        cita.comprobanteUrl
+                      className={`w-full md:w-auto px-4 py-2.5 rounded-lg font-bold transition-all ${cita.comprobanteUrl
                         ? 'bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-xl active:scale-95'
                         : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                      }`}
+                        }`}
                     >
                       Aprobar
                     </button>
-                    
+
                     <button
                       onClick={() => manejarValidacion(cita.id, 'RECHAZAR')}
                       className="w-full md:w-auto px-4 py-2.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 font-bold transition-all hover:shadow-md active:scale-95"

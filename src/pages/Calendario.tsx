@@ -1,14 +1,16 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useCitas } from '../hooks/useCitas';
+import { useQueryClient } from '@tanstack/react-query';
 import { Calendar, dateFnsLocalizer, Views } from 'react-big-calendar';
 import type { View, Components } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { io } from 'socket.io-client'; 
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  LayoutGrid, 
-  Clock, 
+import { io } from 'socket.io-client';
+import {
+  ChevronLeft,
+  ChevronRight,
+  LayoutGrid,
+  Clock,
   Calendar as CalendarIcon,
   CheckCircle2,
   AlertCircle,
@@ -31,20 +33,13 @@ const localizer = dateFnsLocalizer({
 });
 
 // --- 2. Interfaces ---
-interface CitaBackend {
-  id: number;
-  clienteNombre: string | null;
-  clienteTelefono: string;
-  fecha: string;
-  horario: string;
-  estado: 'PENDIENTE_PAGO' | 'VALIDAR' | 'CONFIRMADA' | string;
-}
+
 
 interface RecursoEvento {
   estado?: string;
   telefono?: string;
   tipo?: 'resumen' | 'cita';
-  count?: number; 
+  count?: number;
 }
 
 interface EventoCalendario {
@@ -61,7 +56,7 @@ const ModalDetalle = ({ event, onClose }: { event: EventoCalendario | null, onCl
   if (!event) return null;
 
   const getStatusColor = (estado?: string) => {
-    switch(estado) {
+    switch (estado) {
       case 'CONFIRMADA': return 'text-emerald-600 bg-emerald-50 border-emerald-200';
       case 'VALIDAR': return 'text-amber-600 bg-amber-50 border-amber-200';
       case 'PENDIENTE_PAGO': return 'text-slate-500 bg-slate-50 border-slate-200';
@@ -128,7 +123,7 @@ const ModalDetalle = ({ event, onClose }: { event: EventoCalendario | null, onCl
         </div>
 
         <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
-          <button 
+          <button
             onClick={onClose}
             className="px-4 py-2 bg-slate-800 text-white font-medium rounded-lg hover:bg-slate-900 transition-all hover:scale-105 active:scale-95 shadow-lg shadow-slate-200"
           >
@@ -144,7 +139,7 @@ const ModalDetalle = ({ event, onClose }: { event: EventoCalendario | null, onCl
 const CustomEventDay = ({ event }: { event: EventoCalendario }) => {
   const { title, resource } = event;
   const getIcon = () => {
-    switch(resource?.estado) {
+    switch (resource?.estado) {
       case 'CONFIRMADA': return <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />;
       case 'VALIDAR': return <AlertCircle className="w-3.5 h-3.5 text-amber-600" />;
       case 'PENDIENTE_PAGO': return <Banknote className="w-3.5 h-3.5 text-slate-500" />;
@@ -218,34 +213,18 @@ const CustomToolbar = ({ onNavigate, onView, view, label }: any) => {
 
 // --- 5. Componente Principal ---
 const CalendarioFinal = () => {
-  const [dataRaw, setDataRaw] = useState<CitaBackend[]>([]);
-  const [loading, setLoading] = useState(true);
-  
+  // React Query Hook
+  const { data: dataRaw = [], isLoading: loading } = useCitas(); // Obtiene todas las citas
+  const queryClient = useQueryClient();
+
   const [fecha, setFecha] = useState(new Date());
   const [vista, setVista] = useState<View>(Views.MONTH);
   const [citaSeleccionada, setCitaSeleccionada] = useState<EventoCalendario | null>(null);
 
-  // --- 5.1 FUNCIÓN DE CARGA (Extraída para reusar) ---
-  const cargarAgenda = useCallback((silencioso = false) => {
-    if (!silencioso) setLoading(true); // Solo muestra carga la primera vez
-    
-    fetch(`${import.meta.env.VITE_API_URL}/citas`) // NOTA: Verificamos la ruta
-      .then((res) => res.ok ? res.json() : [])
-      .then((data) => setDataRaw(Array.isArray(data) ? data : []))
-      .catch((err) => {
-        console.warn("Error API", err);
-      })
-      .finally(() => setLoading(false));
-  }, []);
-
   // --- 5.2 USE EFFECT CON SOCKETS ---
   useEffect(() => {
-    // 1. Carga inicial
-    cargarAgenda();
-
-    // 2. Conexión WebSocket
-    // Importante: El socket se conecta a la raíz (ej: localhost:3000), no a /api
-    const urlBase = import.meta.env.VITE_API_URL.replace('/api', ''); 
+    // Conexión WebSocket
+    const urlBase = import.meta.env.VITE_API_URL.replace('/api', '');
     const socket = io(urlBase);
 
     socket.on('connect', () => {
@@ -255,14 +234,14 @@ const CalendarioFinal = () => {
     // 3. ESCUCHAR CAMBIOS DEL BACKEND
     socket.on('cambio-citas', () => {
       console.log('Cambio detectado en citas -> Recargando agenda...');
-      cargarAgenda(true); // True = recarga silenciosa (sin pantalla de carga)
+      // Invalidamos la query para que React Query vuelva a hacer fetch automáticamente
+      queryClient.invalidateQueries({ queryKey: ['citas'] });
     });
 
-    // Limpieza al salir
     return () => {
       socket.disconnect();
     };
-  }, [cargarAgenda]);
+  }, [queryClient]);
 
 
   // --- Procesamiento de Eventos (Igual que antes) ---
@@ -281,7 +260,7 @@ const CalendarioFinal = () => {
         const start = new Date(`${dateStr}T00:00:00`);
         return {
           id: `sum-${dateStr}`,
-          title: `${count} cita${count > 1 ? 's' : ''}`, 
+          title: `${count} cita${count > 1 ? 's' : ''}`,
           start,
           end: new Date(start),
           allDay: true,
@@ -293,16 +272,16 @@ const CalendarioFinal = () => {
     return dataRaw.map(cita => {
       const datePart = cita.fecha.toString().split('T')[0];
       const start = new Date(`${datePart}T${cita.horario}:00`);
-      const end = new Date(start.getTime() + 60 * 60000); 
+      const end = new Date(start.getTime() + 60 * 60000);
       return {
         id: cita.id.toString(),
         title: cita.clienteNombre || `Cita sin nombre`,
         start,
         end,
-        resource: { 
-          tipo: 'cita' as const, 
+        resource: {
+          tipo: 'cita' as const,
           estado: cita.estado,
-          telefono: cita.clienteTelefono 
+          telefono: cita.clienteTelefono
         }
       };
     });
@@ -349,7 +328,7 @@ const CalendarioFinal = () => {
       setFecha(event.start);
       setVista(Views.DAY);
     } else {
-      if(event.resource?.tipo === 'cita') setCitaSeleccionada(event);
+      if (event.resource?.tipo === 'cita') setCitaSeleccionada(event);
     }
   };
 

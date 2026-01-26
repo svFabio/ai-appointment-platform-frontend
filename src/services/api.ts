@@ -4,10 +4,14 @@ import type { Cita } from '../types';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 export const api = {
-  // Obtener citas del mes/día
-  obtenerCitas: async (fecha: string): Promise<Cita[]> => {
+  // Obtener citas (opcional filtro por fecha)
+  obtenerCitas: async (fecha?: string): Promise<Cita[]> => {
     try {
-      const response = await fetch(`${API_URL}/citas?fecha=${fecha}`);
+      const url = fecha
+        ? `${API_URL}/citas?fecha=${fecha}`
+        : `${API_URL}/citas`;
+
+      const response = await fetch(url);
       if (!response.ok) throw new Error('Error al obtener citas');
       return await response.json();
     } catch (error) {
