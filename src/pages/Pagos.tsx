@@ -1,30 +1,20 @@
 import { usePendientes, useValidarPago } from '../hooks/useCitas';
 
-interface Cita {
-  id: number;
-  clienteNombre: string | null;
-  clienteTelefono: string;
-  fecha: string;
-  horario: string;
-  estado: string;
-  comprobanteUrl: string | null;
-}
-
 const Pagos = () => {
   // Usamos los hooks de React Query
   const { data: citas = [], isLoading: loading } = usePendientes();
   const { mutateAsync: validarPago } = useValidarPago();
 
   // 2. Función para Validar
-  const manejarValidacion = async (id: number, accion: 'CONFIRMAR' | 'RECHAZAR') => {
+  const manejarValidacion = async (id: string, accion: 'APROBAR' | 'RECHAZAR') => {
     // Nota: window.confirm bloquea el hilo, mejor usar un modal custom o confiar en el usuario.
     // Para simplificar, lo mantenemos o lo quitamos según preferencia.
-    const confirmacion = window.confirm(`¿Estás seguro de ${accion === 'CONFIRMAR' ? 'APROBAR' : 'RECHAZAR'} este pago?`);
+    const confirmacion = window.confirm(`¿Estás seguro de ${accion === 'APROBAR' ? 'APROBAR' : 'RECHAZAR'} este pago?`);
     if (!confirmacion) return;
 
     try {
       // El hook maneja el toast de éxito/error y la invalidación de queries
-      await validarPago({ id: id.toString(), accion });
+      await validarPago({ id, accion });
     } catch (err) {
       console.error(err);
     }
@@ -118,7 +108,7 @@ const Pagos = () => {
                   {/* Actions */}
                   <div className="flex flex-col gap-3 md:gap-0 md:flex-row md:items-center md:justify-end md:w-48">
                     <button
-                      onClick={() => manejarValidacion(cita.id, 'CONFIRMAR')}
+                      onClick={() => manejarValidacion(cita.id, 'APROBAR')}
                       disabled={!cita.comprobanteUrl}
                       className={`w-full md:w-auto px-4 py-2.5 rounded-lg font-bold transition-all ${cita.comprobanteUrl
                         ? 'bg-green-600 hover:bg-green-700 text-white shadow-lg hover:shadow-xl active:scale-95'

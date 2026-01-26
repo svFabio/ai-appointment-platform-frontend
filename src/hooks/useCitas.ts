@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
 import { toast } from 'sonner';
-import type { Cita } from '../types';
 
 export const useCitas = (fecha?: string) => {
     return useQuery({

@@ -10,13 +10,13 @@ interface Props {
 export const ValidationCard = ({ cita, onAction }: Props) => {
   return (
     <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden mb-6 transition-all hover:shadow-xl">
-      
+
       {/* Encabezado de la tarjeta */}
       <div className="bg-gray-50 p-4 border-b border-gray-200">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
           <div>
-             <h3 className="font-bold text-gray-800 text-lg md:text-xl">{cita.clienteNombre}</h3>
-             <p className="text-sm text-gray-600 font-medium mt-1">Teléfono: {cita.clienteTelefono}</p>
+            <h3 className="font-bold text-gray-800 text-lg md:text-xl">{cita.clienteNombre}</h3>
+            <p className="text-sm text-gray-600 font-medium mt-1">Teléfono: {cita.clienteTelefono}</p>
           </div>
           <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200">
             {cita.estado}
@@ -37,11 +37,11 @@ export const ValidationCard = ({ cita, onAction }: Props) => {
                 </div>
                 <div className="bg-gray-50 p-3 rounded-lg">
                   <span className="text-gray-600 font-medium">Hora:</span>
-                  <span className="ml-2 font-semibold">{cita.hora}</span>
+                  <span className="ml-2 font-semibold">{cita.horario}</span>
                 </div>
               </div>
             </div>
-            
+
             {/* Botones - responsive */}
             <div className="flex flex-col sm:flex-row gap-3">
               <button
@@ -75,9 +75,9 @@ export const ValidationCard = ({ cita, onAction }: Props) => {
                   className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                   <span className="opacity-0 group-hover:opacity-100 bg-black/60 text-white text-xs px-3 py-1.5 rounded-full backdrop-blur-sm transition-opacity font-medium">
-                      Ver imagen completa
-                   </span>
+                  <span className="opacity-0 group-hover:opacity-100 bg-black/60 text-white text-xs px-3 py-1.5 rounded-full backdrop-blur-sm transition-opacity font-medium">
+                    Ver imagen completa
+                  </span>
                 </div>
               </a>
             ) : (
