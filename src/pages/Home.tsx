@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { api } from '../services/api';
 
 // Definimos la interfaz exacta que viene de tu backend
 interface CitaResumen {
@@ -13,15 +14,17 @@ interface ResumenData {
   citasHoy: number;
   pendientes: number;
   proximasCitas: CitaResumen[];
+  totalFuturas: number;
 }
 
 const Dashboard = () => {
   const [data, setData] = useState<ResumenData | null>(null);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/citas/resumen`)
-      .then(res => res.json())
-      .then(setData)
+    api.obtenerResumen()
+      .then(resumen => {
+        if (resumen) setData(resumen);
+      })
       .catch(console.error);
   }, []);
 
@@ -41,7 +44,7 @@ const Dashboard = () => {
         <h1 className="text-xl md:text-2xl font-bold text-gray-800">Panel de Control</h1>
         <p className="text-sm text-gray-600 mt-1">Resumen de tu spa y citas</p>
       </div>
-      
+
       {/* Tarjetas de Resumen */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="bg-white p-4 md:p-6 rounded-lg shadow border-l-4 border-kenyan-copper-500 hover:shadow-lg transition-shadow">
@@ -52,7 +55,7 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="bg-white p-4 md:p-6 rounded-lg shadow border-l-4 border-orange-500 hover:shadow-lg transition-shadow">
           <div className="flex items-center justify-between">
             <div>
@@ -61,12 +64,12 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="bg-white p-4 md:p-6 rounded-lg shadow border-l-4 border-green-500 hover:shadow-lg transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 font-medium">Total Citas</p>
-              <p className="text-2xl md:text-3xl font-bold text-green-600 mt-1">{data.proximasCitas.length}</p>
+              <p className="text-2xl md:text-3xl font-bold text-green-600 mt-1">{data.totalFuturas}</p>
             </div>
           </div>
         </div>
@@ -78,7 +81,7 @@ const Dashboard = () => {
           <h2 className="text-lg md:text-xl font-bold text-gray-800">Agenda de Hoy</h2>
           <p className="text-sm text-gray-600 mt-1">Todas las citas programadas para hoy</p>
         </div>
-        
+
         {/* Desktop Table */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left">
@@ -103,25 +106,24 @@ const Dashboard = () => {
                     <td className="px-6 py-4 font-semibold text-gray-800">
                       {cita.horario}
                     </td>
-                    
+
                     <td className="px-6 py-4">
                       {cita.clienteNombre ? (
                         <span className="capitalize font-medium">{cita.clienteNombre}</span>
                       ) : (
                         <span className="text-gray-500 text-sm flex items-center gap-1">
                           Tel: {cita.clienteTelefono.length > 15
-                               ? cita.clienteTelefono.substring(0, 8) + '...'
-                               : cita.clienteTelefono}
+                            ? cita.clienteTelefono.substring(0, 8) + '...'
+                            : cita.clienteTelefono}
                         </span>
                       )}
                     </td>
 
                     <td className="px-6 py-4">
-                      <span className={`px-3 py-1 text-xs rounded-full font-semibold ${
-                        cita.estado === 'CONFIRMADA' ? 'bg-green-100 text-green-800' :
+                      <span className={`px-3 py-1 text-xs rounded-full font-semibold ${cita.estado === 'CONFIRMADA' ? 'bg-green-100 text-green-800' :
                         cita.estado === 'VALIDACION_PENDIENTE' ? 'bg-orange-100 text-orange-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
+                          'bg-gray-100 text-gray-800'
+                        }`}>
                         {cita.estado}
                       </span>
                     </td>
@@ -150,16 +152,15 @@ const Dashboard = () => {
                     ) : (
                       <p className="text-sm text-gray-500 flex items-center gap-1">
                         Tel: {cita.clienteTelefono.length > 15
-                             ? cita.clienteTelefono.substring(0, 8) + '...'
-                             : cita.clienteTelefono}
+                          ? cita.clienteTelefono.substring(0, 8) + '...'
+                          : cita.clienteTelefono}
                       </p>
                     )}
                   </div>
-                  <span className={`px-2 py-1 text-xs rounded-full font-semibold ${
-                    cita.estado === 'CONFIRMADA' ? 'bg-green-100 text-green-800' :
+                  <span className={`px-2 py-1 text-xs rounded-full font-semibold ${cita.estado === 'CONFIRMADA' ? 'bg-green-100 text-green-800' :
                     cita.estado === 'VALIDACION_PENDIENTE' ? 'bg-orange-100 text-orange-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
+                      'bg-gray-100 text-gray-800'
+                    }`}>
                     {cita.estado}
                   </span>
                 </div>
