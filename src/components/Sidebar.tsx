@@ -16,7 +16,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   // Clases base para los links
   const linkClass = (path: string) => `
     flex items-center gap-3 px-4 py-3 rounded transition-all duration-200
-    ${isActive(path) 
+    ${isActive(path)
       ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50' // Estilo Activo
       : 'text-gray-400 hover:bg-slate-800 hover:text-white'   // Estilo Inactivo
     }
@@ -44,23 +44,23 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
       {/* Navegación */}
       <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-        
-        <Link to="/" onClick={onClose} className={linkClass('/')}>
+
+        <Link to="/dashboard" onClick={onClose} className={linkClass('/dashboard')}>
           <LayoutDashboard size={20} />
           <span className="font-medium">Inicio</span>
         </Link>
 
-        <Link to="/calendario" onClick={onClose} className={linkClass('/calendario')}>
+        <Link to="/dashboard/calendario" onClick={onClose} className={linkClass('/dashboard/calendario')}>
           <Calendar size={20} />
           <span className="font-medium">Calendario</span>
         </Link>
 
-        <Link to="/pagos" onClick={onClose} className={linkClass('/pagos')}>
+        <Link to="/dashboard/pagos" onClick={onClose} className={linkClass('/dashboard/pagos')}>
           <CheckSquare size={20} />
           <span className="font-medium">Validar Pagos</span>
         </Link>
 
-        <Link to="/vincular" onClick={onClose} className={linkClass('/vincular')}>
+        <Link to="/dashboard/vincular" onClick={onClose} className={linkClass('/dashboard/vincular')}>
           <Smartphone size={20} />
           <span className="font-medium">Vincular WhatsApp</span>
         </Link>
