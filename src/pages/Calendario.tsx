@@ -18,8 +18,11 @@ import {
   Phone,
   X,
   User,
-  Timer
+  Timer,
+  Plus,
+  Loader2
 } from 'lucide-react';
+import { api } from '../services/api';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 // --- 1. Configuración Regional ---
@@ -135,6 +138,231 @@ const ModalDetalle = ({ event, onClose }: { event: EventoCalendario | null, onCl
   );
 };
 
+// --- 3.5 Componente MODAL NUEVA CITA ---
+interface DatosNuevaCita {
+  clienteNombre: string;
+  clienteTelefono: string;
+  fecha: string;
+  horario: string;
+}
+
+const ModalNuevaCita = ({
+  isOpen,
+  onClose,
+  fechaInicial,
+  onSuccess
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  fechaInicial?: Date;
+  onSuccess: () => void;
+}) => {
+  const [formData, setFormData] = useState<DatosNuevaCita>({
+    clienteNombre: '',
+    clienteTelefono: '',
+    fecha: fechaInicial ? format(fechaInicial, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
+    horario: ''
+  });
+  const [horariosDisponibles, setHorariosDisponibles] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [loadingHorarios, setLoadingHorarios] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Cargar horarios cuando cambia la fecha
+  useEffect(() => {
+    if (isOpen && formData.fecha) {
+      cargarHorarios(formData.fecha);
+    }
+  }, [isOpen, formData.fecha]);
+
+  // Reset cuando se abre con nueva fecha
+  useEffect(() => {
+    if (isOpen && fechaInicial) {
+      setFormData(prev => ({
+        ...prev,
+        fecha: format(fechaInicial, 'yyyy-MM-dd'),
+        horario: ''
+      }));
+    }
+  }, [isOpen, fechaInicial]);
+
+  const cargarHorarios = async (fecha: string) => {
+    setLoadingHorarios(true);
+    const horarios = await api.obtenerHorariosDisponibles(fecha);
+    setHorariosDisponibles(horarios);
+    setLoadingHorarios(false);
+    // Si el horario seleccionado ya no está disponible, limpiarlo
+    if (!horarios.includes(formData.horario)) {
+      setFormData(prev => ({ ...prev, horario: '' }));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    // Validaciones Frontend
+    if (formData.clienteNombre.trim().length < 3) {
+      setError('El nombre debe tener al menos 3 caracteres.');
+      return;
+    }
+
+    if (formData.clienteTelefono.length < 8) {
+      setError('El teléfono debe tener al menos 8 dígitos.');
+      return;
+    }
+
+    setLoading(true);
+
+    const result = await api.crearCitaAdmin(formData);
+
+    setLoading(false);
+
+    if (result.success) {
+      // Limpiar formulario
+      setFormData({ clienteNombre: '', clienteTelefono: '', fecha: format(new Date(), 'yyyy-MM-dd'), horario: '' });
+      onSuccess();
+      onClose();
+    } else {
+      setError(result.error || 'Error al crear la cita');
+    }
+  };
+
+  const handleClose = () => {
+    setError(null);
+    setFormData({ clienteNombre: '', clienteTelefono: '', fecha: format(new Date(), 'yyyy-MM-dd'), horario: '' });
+    onClose();
+  };
+
+  // Handler para teléfono (solo números)
+  const handleTelefonoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const valor = e.target.value.replace(/\D/g, ''); // Eliminar todo lo que no sea número
+    setFormData(prev => ({ ...prev, clienteTelefono: valor }));
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-100 overflow-hidden animate-modal-pop">
+        <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-white">
+          <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
+            <Plus className="w-5 h-5" /> Nueva Cita Presencial
+          </h3>
+          <button onClick={handleClose} className="p-1 hover:bg-slate-100 rounded-full transition-colors">
+            <X className="w-5 h-5 text-slate-600" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-semibold text-slate-600 mb-1">Nombre del Cliente *</label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                required
+                value={formData.clienteNombre}
+                onChange={(e) => setFormData(prev => ({ ...prev, clienteNombre: e.target.value }))}
+                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                placeholder="Ej: Juan Pérez"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-slate-600 mb-1">Teléfono *</label>
+            <div className="relative">
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="tel"
+                required
+                value={formData.clienteTelefono}
+                onChange={handleTelefonoChange}
+                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                placeholder="Ej: 591 70000000"
+              />
+            </div>
+            <p className="text-xs text-slate-400 mt-1 ml-1">Solo números</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-slate-600 mb-1">Fecha *</label>
+            <div className="relative">
+              <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="date"
+                required
+                value={formData.fecha}
+                onChange={(e) => setFormData(prev => ({ ...prev, fecha: e.target.value }))}
+                min={format(new Date(), 'yyyy-MM-dd')}
+                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-slate-600 mb-1">Horario *</label>
+            {loadingHorarios ? (
+              <div className="flex items-center justify-center py-4 text-slate-500">
+                <Loader2 className="w-5 h-5 animate-spin mr-2" /> Cargando horarios...
+              </div>
+            ) : horariosDisponibles.length === 0 ? (
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-sm">
+                No hay horarios disponibles para esta fecha
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-2">
+                {horariosDisponibles.map((h) => (
+                  <button
+                    key={h}
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, horario: h }))}
+                    className={`py-2.5 px-3 rounded-lg font-semibold text-sm transition-all ${formData.horario === h
+                      ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      }`}
+                  >
+                    {h}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-3 pt-4 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-all"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={loading || !formData.horario}
+              className="flex-1 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Creando...</>
+              ) : (
+                <><Plus className="w-4 h-4" /> Crear Cita</>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 // --- 4. Componentes Visuales del Calendario ---
 const CustomEventDay = ({ event }: { event: EventoCalendario }) => {
   const { title, resource } = event;
@@ -175,7 +403,7 @@ const CustomEventMonth = ({ event }: { event: EventoCalendario }) => {
   );
 };
 
-const CustomToolbar = ({ onNavigate, onView, view, label }: any) => {
+const CustomToolbar = ({ onNavigate, onView, view, label, onNuevaCita }: any) => {
   return (
     <div className="flex flex-col md:flex-row items-center justify-between mb-4 pb-4 border-b border-slate-200 gap-4">
       <div className="flex items-center gap-2">
@@ -193,19 +421,28 @@ const CustomToolbar = ({ onNavigate, onView, view, label }: any) => {
         <h2 className="text-xl font-bold text-slate-800 ml-2 capitalize font-sans">{label}</h2>
       </div>
 
-      <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
+      <div className="flex items-center gap-3">
         <button
-          onClick={() => onView(Views.MONTH)}
-          className={`flex items-center gap-2 px-4 py-1.5 text-sm font-semibold rounded-md transition-all ${view === Views.MONTH ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          onClick={onNuevaCita}
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg shadow-indigo-200 hover:scale-105 active:scale-95"
         >
-          <LayoutGrid className="w-4 h-4" /> <span>Mes</span>
+          <Plus className="w-4 h-4" /> Nueva Cita
         </button>
-        <button
-          onClick={() => onView(Views.DAY)}
-          className={`flex items-center gap-2 px-4 py-1.5 text-sm font-semibold rounded-md transition-all ${view === Views.DAY ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-        >
-          <Clock className="w-4 h-4" /> <span>Día</span>
-        </button>
+
+        <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
+          <button
+            onClick={() => onView(Views.MONTH)}
+            className={`flex items-center gap-2 px-4 py-1.5 text-sm font-semibold rounded-md transition-all ${view === Views.MONTH ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          >
+            <LayoutGrid className="w-4 h-4" /> <span>Mes</span>
+          </button>
+          <button
+            onClick={() => onView(Views.DAY)}
+            className={`flex items-center gap-2 px-4 py-1.5 text-sm font-semibold rounded-md transition-all ${view === Views.DAY ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          >
+            <Clock className="w-4 h-4" /> <span>Día</span>
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -220,6 +457,11 @@ const CalendarioFinal = () => {
   const [fecha, setFecha] = useState(new Date());
   const [vista, setVista] = useState<View>(Views.MONTH);
   const [citaSeleccionada, setCitaSeleccionada] = useState<EventoCalendario | null>(null);
+  const [modalNuevaCita, setModalNuevaCita] = useState<{ isOpen: boolean; fecha?: Date }>({ isOpen: false });
+
+  const abrirModalNuevaCita = (fechaPreseleccionada?: Date) => {
+    setModalNuevaCita({ isOpen: true, fecha: fechaPreseleccionada });
+  };
 
   // --- 5.2 USE EFFECT CON SOCKETS ---
   useEffect(() => {
@@ -309,7 +551,7 @@ const CalendarioFinal = () => {
   }, []);
 
   const components: Components<EventoCalendario> = useMemo(() => ({
-    toolbar: CustomToolbar,
+    toolbar: (props: any) => <CustomToolbar {...props} onNuevaCita={() => abrirModalNuevaCita()} />,
     event: ({ event }: any) => {
       if (vista === Views.MONTH) return <CustomEventMonth event={event} />;
       return <CustomEventDay event={event} />;
@@ -320,6 +562,9 @@ const CalendarioFinal = () => {
     if (vista === Views.MONTH && slotInfo.action === 'click') {
       setFecha(slotInfo.start);
       setVista(Views.DAY);
+    } else if (vista === Views.DAY && slotInfo.action === 'click') {
+      // En vista de día, abrir modal con fecha preseleccionada
+      abrirModalNuevaCita(slotInfo.start);
     }
   };
 
@@ -337,6 +582,12 @@ const CalendarioFinal = () => {
       {citaSeleccionada && (
         <ModalDetalle event={citaSeleccionada} onClose={() => setCitaSeleccionada(null)} />
       )}
+      <ModalNuevaCita
+        isOpen={modalNuevaCita.isOpen}
+        onClose={() => setModalNuevaCita({ isOpen: false })}
+        fechaInicial={modalNuevaCita.fecha}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: ['citas'] })}
+      />
       <div key={vista} className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 p-6 h-[85vh] flex flex-col border border-slate-100 animate-tab-change">
         <Calendar
           culture='es' localizer={localizer} events={eventos}
