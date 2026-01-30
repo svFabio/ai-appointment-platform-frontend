@@ -58,11 +58,13 @@ interface EventoCalendario {
 const ModalDetalle = ({
   event,
   onClose,
-  onReprogramar
+  onReprogramar,
+  onNoAsistio
 }: {
   event: EventoCalendario | null,
   onClose: () => void,
-  onReprogramar: () => void
+  onReprogramar: () => void,
+  onNoAsistio: () => void
 }) => {
   if (!event) return null;
 
@@ -71,6 +73,7 @@ const ModalDetalle = ({
       case 'CONFIRMADA': return 'text-emerald-600 bg-emerald-50 border-emerald-200';
       case 'VALIDAR': return 'text-amber-600 bg-amber-50 border-amber-200';
       case 'PENDIENTE_PAGO': return 'text-slate-500 bg-slate-50 border-slate-200';
+      case 'NO_ASISTIO': return 'text-gray-500 bg-gray-50 border-gray-300';
       default: return 'text-indigo-600 bg-indigo-50 border-indigo-200';
     }
   };
@@ -133,21 +136,31 @@ const ModalDetalle = ({
 
         </div>
 
-        <div className="p-4 bg-slate-50 border-t border-slate-100 flex gap-3">
-          {event.resource?.tipo === 'cita' && (
+        <div className="p-4 bg-slate-50 border-t border-slate-100">
+          <div className="flex gap-3">
+            {event.resource?.tipo === 'cita' && (
+              <button
+                onClick={onReprogramar}
+                className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-100 transition-all text-sm"
+              >
+                Reprogramar
+              </button>
+            )}
             <button
-              onClick={onReprogramar}
-              className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-100 transition-all text-sm"
+              onClick={onClose}
+              className="flex-1 px-4 py-2 bg-slate-800 text-white font-medium rounded-lg hover:bg-slate-900 transition-all shadow-lg shadow-slate-200 text-sm"
             >
-              Reprogramar
+              Cerrar
+            </button>
+          </div>
+          {event.resource?.tipo === 'cita' && event.start < new Date() && event.resource?.estado !== 'NO_ASISTIO' && event.resource?.estado !== 'CANCELADA' && (
+            <button
+              onClick={onNoAsistio}
+              className="w-full mt-3 px-4 py-2 border border-gray-300 text-gray-600 font-medium rounded-lg hover:bg-gray-50 transition-all text-sm flex items-center gap-2 justify-center"
+            >
+              <X className="w-4 h-4" /> No Asistió
             </button>
           )}
-          <button
-            onClick={onClose}
-            className="flex-1 px-4 py-2 bg-slate-800 text-white font-medium rounded-lg hover:bg-slate-900 transition-all shadow-lg shadow-slate-200 text-sm"
-          >
-            Cerrar
-          </button>
         </div>
       </div>
     </div>
@@ -634,13 +647,6 @@ const CalendarioFinal = () => {
     setModalNuevaCita({ isOpen: true, fecha: fechaPreseleccionada });
   };
 
-  const handleReprogramar = () => {
-    if (citaSeleccionada) {
-      setModalReprogramar({ isOpen: true, cita: citaSeleccionada });
-      setCitaSeleccionada(null);
-    }
-  };
-
   // --- 5.2 USE EFFECT CON SOCKETS ---
   useEffect(() => {
     // Conexión WebSocket
@@ -723,6 +729,12 @@ const CalendarioFinal = () => {
       case 'PENDIENTE_PAGO': style.backgroundColor = '#f8fafc'; style.borderLeft = '3px solid #94a3b8'; break;
       case 'VALIDAR': style.backgroundColor = '#fffbeb'; style.borderLeft = '3px solid #f59e0b'; break;
       case 'CONFIRMADA': style.backgroundColor = '#ecfdf5'; style.borderLeft = '3px solid #10b981'; break;
+      case 'NO_ASISTIO':
+        style.backgroundColor = '#f9fafb';
+        style.borderLeft = '3px solid #9ca3af';
+        style.textDecoration = 'line-through';
+        style.opacity = '0.7';
+        break;
       default: style.backgroundColor = '#f1f5f9'; style.borderLeft = '3px solid #cbd5e1';
     }
     return { style };
@@ -746,6 +758,26 @@ const CalendarioFinal = () => {
     }
   };
 
+  const handleReprogramar = () => {
+    if (citaSeleccionada) {
+      setModalReprogramar({ isOpen: true, cita: citaSeleccionada });
+      setCitaSeleccionada(null);
+    }
+  };
+
+  const handleNoAsistio = async () => {
+    if (!citaSeleccionada) return;
+
+    const result = await api.marcarNoAsistio(citaSeleccionada.id);
+
+    if (result.success) {
+      queryClient.invalidateQueries({ queryKey: ['citas'] });
+      setCitaSeleccionada(null);
+    } else {
+      alert(result.error || 'Error al marcar como no asistió');
+    }
+  };
+
   const onSelectEvent = (event: EventoCalendario) => {
     if (vista === Views.MONTH) {
       setFecha(event.start);
@@ -762,6 +794,7 @@ const CalendarioFinal = () => {
           event={citaSeleccionada}
           onClose={() => setCitaSeleccionada(null)}
           onReprogramar={handleReprogramar}
+          onNoAsistio={handleNoAsistio}
         />
       )}
       <ModalNuevaCita
