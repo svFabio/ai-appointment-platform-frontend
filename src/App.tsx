@@ -1,4 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { io } from 'socket.io-client';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Dashboard from './pages/Dashboard';
@@ -7,11 +9,66 @@ import Calendario from './pages/Calendario';
 import Home from './pages/Home';
 import Vincular from './pages/Vincular';
 import Login from './pages/Login';
+import { NotificationToast } from './components/NotificationToast';
+import { useNotifications } from './hooks/useNotifications';
+import { playNotificationSound } from './utils/notificationSound';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 function App() {
+  const { notifications, addNotification, dismissNotification } = useNotifications();
+
+  useEffect(() => {
+    // Conectar al Socket.IO cuando la app se monta
+    const urlBase = import.meta.env.VITE_API_URL.replace('/api', '');
+    const socket = io(urlBase, {
+      transports: ['websocket', 'polling'],
+      reconnection: true
+    });
+
+    // Escuchar evento de nueva cita
+    socket.on('nueva-cita', (data: any) => {
+      console.log('📬 Nueva cita recibida:', data);
+
+      // Formatear fecha para mostrar
+      const fechaFormateada = format(new Date(data.fecha), 'dd MMM yyyy', { locale: es });
+
+      // Agregar notificación
+      addNotification({
+        message: `Nueva cita de ${data.clienteNombre}`,
+        clienteNombre: data.clienteNombre,
+        fecha: fechaFormateada,
+        horario: data.horario
+      });
+
+      // Reproducir sonido
+      playNotificationSound();
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [addNotification]);
+
   return (
     <AuthProvider>
       <div className="App">
+        {/* Contenedor de notificaciones - Desktop: bottom-right, Mobile: top-center */}
+        <div className="fixed md:bottom-4 md:right-4 md:top-auto top-0 left-0 right-0 md:left-auto md:w-auto w-full z-[9999] pointer-events-none">
+          <div className="pointer-events-auto md:space-y-0 space-y-0">
+            {notifications.map((notif) => (
+              <NotificationToast
+                key={notif.id}
+                id={notif.id}
+                clienteNombre={notif.clienteNombre}
+                fecha={notif.fecha}
+                horario={notif.horario}
+                onDismiss={dismissNotification}
+              />
+            ))}
+          </div>
+        </div>
+
         <Routes>
           {/* Ruta de Login (pública) */}
           <Route path="/login" element={<Login />} />

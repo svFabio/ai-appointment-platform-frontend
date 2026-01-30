@@ -135,5 +135,64 @@ export const api = {
       console.error(error);
       return null;
     }
+  },
+
+  // Reprogramar cita
+  reprogramarCita: async (id: string, fecha: string, horario: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const response = await fetch(`${API_URL}/citas/${id}/reprogramar`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify({ fecha, horario })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        return { success: false, error: errorData.error || 'Error al reprogramar la cita' };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error(error);
+      return { success: false, error: 'Error de conexión' };
+    }
+  },
+
+  marcarNoAsistio: async (id: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const response = await fetch(`${API_URL}/citas/${id}/no-asistio`, {
+        method: 'PUT',
+        headers: getHeaders()
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        return { success: false, error: errorData.error || 'Error al marcar como no asistió' };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error(error);
+      return { success: false, error: 'Error de conexión' };
+    }
+  },
+
+  marcarAsistio: async (id: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const response = await fetch(`${API_URL}/citas/${id}/asistio`, {
+        method: 'PUT',
+        headers: getHeaders()
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        return { success: false, error: errorData.error || 'Error al marcar como asistió' };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error(error);
+      return { success: false, error: 'Error de conexión' };
+    }
   }
 };

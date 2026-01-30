@@ -55,14 +55,25 @@ interface EventoCalendario {
 }
 
 // --- 3. Componente MODAL ---
-const ModalDetalle = ({ event, onClose }: { event: EventoCalendario | null, onClose: () => void }) => {
+const ModalDetalle = ({
+  event,
+  onClose,
+  onReprogramar,
+  onNoAsistio
+}: {
+  event: EventoCalendario | null,
+  onClose: () => void,
+  onReprogramar: () => void,
+  onNoAsistio: () => void
+}) => {
   if (!event) return null;
 
   const getStatusColor = (estado?: string) => {
     switch (estado) {
-      case 'CONFIRMADA': return 'text-emerald-600 bg-emerald-50 border-emerald-200';
+      case 'CONFIRMADA': return 'text-green-700 bg-green-100 border-green-300';
       case 'VALIDAR': return 'text-amber-600 bg-amber-50 border-amber-200';
       case 'PENDIENTE_PAGO': return 'text-slate-500 bg-slate-50 border-slate-200';
+      case 'NO_ASISTIO': return 'text-red-700 bg-red-100 border-red-300';
       default: return 'text-indigo-600 bg-indigo-50 border-indigo-200';
     }
   };
@@ -125,13 +136,38 @@ const ModalDetalle = ({ event, onClose }: { event: EventoCalendario | null, onCl
 
         </div>
 
-        <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-slate-800 text-white font-medium rounded-lg hover:bg-slate-900 transition-all hover:scale-105 active:scale-95 shadow-lg shadow-slate-200"
-          >
-            Cerrar
-          </button>
+        <div className="p-4 bg-slate-50 border-t border-slate-100">
+          <div className="flex gap-3">
+            {event.resource?.tipo === 'cita' && (
+              <button
+                onClick={onReprogramar}
+                className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-100 transition-all text-sm"
+              >
+                Reprogramar
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="flex-1 px-4 py-2 bg-slate-800 text-white font-medium rounded-lg hover:bg-slate-900 transition-all shadow-lg shadow-slate-200 text-sm"
+            >
+              Cerrar
+            </button>
+          </div>
+          {event.resource?.tipo === 'cita' && event.start < new Date() && event.resource?.estado !== 'CANCELADA' && (
+            <button
+              onClick={onNoAsistio}
+              className={`w-full mt-3 px-4 py-2 border font-medium rounded-lg transition-all text-sm flex items-center gap-2 justify-center ${event.resource?.estado === 'NO_ASISTIO'
+                  ? 'border-green-300 text-green-700 hover:bg-green-50'
+                  : 'border-red-300 text-red-700 hover:bg-red-50'
+                }`}
+            >
+              {event.resource?.estado === 'NO_ASISTIO' ? (
+                <><CheckCircle2 className="w-4 h-4" /> Marcar como Asistió</>
+              ) : (
+                <><X className="w-4 h-4" /> No Asistió</>
+              )}
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -363,6 +399,160 @@ const ModalNuevaCita = ({
   );
 };
 
+// --- 3.6 Componente MODAL REPROGRAMAR ---
+const ModalReprogramar = ({
+  isOpen,
+  onClose,
+  cita,
+  onSuccess
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  cita: EventoCalendario;
+  onSuccess: () => void;
+}) => {
+  const [fecha, setFecha] = useState(format(cita.start, 'yyyy-MM-dd'));
+  const [horario, setHorario] = useState(format(cita.start, 'HH:mm'));
+  const [horariosDisponibles, setHorariosDisponibles] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [loadingHorarios, setLoadingHorarios] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      cargarHorarios(fecha);
+    }
+  }, [isOpen, fecha]);
+
+  const cargarHorarios = async (fechaSel: string) => {
+    setLoadingHorarios(true);
+    const horarios = await api.obtenerHorariosDisponibles(fechaSel);
+    // Si es la misma fecha de la cita original, asegúrate de incluir el horario actual si se quiere mantener (aunque la idea es cambiarlo)
+    // Pero si el usuario cambia de fecha y vuelve a la original, el horario original debería estar "ocupado" por él mismo, así que la API lo devolvería como ocupado?
+    // En la API `getHorariosDisponibles` no excluimos la cita actual.
+    // Para simplificar, asumimos que si reprograma es para cambiar.
+    setHorariosDisponibles(horarios);
+    setLoadingHorarios(false);
+
+    // Si el horario seleccionado ya no está en la lista (y no es el original), limpiarlo
+    // Pero si es el original y estamos en la fecha original, tal vez no aparezca disponible, pero es SU horario.
+    // De momento, si reprograma, se asume que busca un hueco LIBRE.
+    if (!horarios.includes(horario) && fechaSel !== format(cita.start, 'yyyy-MM-dd')) {
+      setHorario('');
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    const result = await api.reprogramarCita(cita.id, fecha, horario);
+
+    setLoading(false);
+
+    if (result.success) {
+      onSuccess();
+      onClose();
+    } else {
+      setError(result.error || 'Error al reprogramar');
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-100 overflow-hidden animate-modal-pop">
+        <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-white">
+          <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
+            <Clock className="w-5 h-5 text-indigo-600" /> Reprogramar Cita
+          </h3>
+          <button onClick={onClose} className="p-1 hover:bg-slate-100 rounded-full transition-colors">
+            <X className="w-5 h-5 text-slate-600" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <div className="p-3 bg-slate-50 rounded-lg text-sm text-slate-700 mb-4 border border-slate-100">
+            <p className="font-semibold text-slate-500 text-xs uppercase mb-1">Cita Actual</p>
+            <p className="font-bold">{cita.title}</p>
+            <p>{format(cita.start, 'EEEE d MMMM, HH:mm', { locale: es })}</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-slate-600 mb-1">Nueva Fecha</label>
+            <div className="relative">
+              <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="date"
+                required
+                value={fecha}
+                onChange={(e) => setFecha(e.target.value)}
+                min={format(new Date(), 'yyyy-MM-dd')}
+                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-slate-600 mb-1">Nuevo Horario</label>
+            {loadingHorarios ? (
+              <div className="flex items-center justify-center py-4 text-slate-500">
+                <Loader2 className="w-5 h-5 animate-spin mr-2" /> Buscando espacios...
+              </div>
+            ) : horariosDisponibles.length === 0 ? (
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-sm">
+                No hay horarios disponibles para esta fecha
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-2">
+                {horariosDisponibles.map((h) => (
+                  <button
+                    key={h}
+                    type="button"
+                    onClick={() => setHorario(h)}
+                    className={`py-2.5 px-3 rounded-lg font-semibold text-sm transition-all ${horario === h
+                      ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      }`}
+                  >
+                    {h}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-3 pt-4 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-all"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={loading || !horario || horariosDisponibles.length === 0}
+              className="flex-1 px-4 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmar Cambio'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 // --- 4. Componentes Visuales del Calendario ---
 const CustomEventDay = ({ event }: { event: EventoCalendario }) => {
   const { title, resource } = event;
@@ -458,6 +648,7 @@ const CalendarioFinal = () => {
   const [vista, setVista] = useState<View>(Views.MONTH);
   const [citaSeleccionada, setCitaSeleccionada] = useState<EventoCalendario | null>(null);
   const [modalNuevaCita, setModalNuevaCita] = useState<{ isOpen: boolean; fecha?: Date }>({ isOpen: false });
+  const [modalReprogramar, setModalReprogramar] = useState<{ isOpen: boolean; cita?: EventoCalendario }>({ isOpen: false });
 
   const abrirModalNuevaCita = (fechaPreseleccionada?: Date) => {
     setModalNuevaCita({ isOpen: true, fecha: fechaPreseleccionada });
@@ -544,7 +735,13 @@ const CalendarioFinal = () => {
     switch (event.resource?.estado) {
       case 'PENDIENTE_PAGO': style.backgroundColor = '#f8fafc'; style.borderLeft = '3px solid #94a3b8'; break;
       case 'VALIDAR': style.backgroundColor = '#fffbeb'; style.borderLeft = '3px solid #f59e0b'; break;
-      case 'CONFIRMADA': style.backgroundColor = '#ecfdf5'; style.borderLeft = '3px solid #10b981'; break;
+      case 'CONFIRMADA': style.backgroundColor = '#d1fae5'; style.borderLeft = '3px solid #059669'; break;
+      case 'NO_ASISTIO':
+        style.backgroundColor = '#fee2e2';
+        style.borderLeft = '3px solid #dc2626';
+        style.textDecoration = 'line-through';
+        style.opacity = '0.8';
+        break;
       default: style.backgroundColor = '#f1f5f9'; style.borderLeft = '3px solid #cbd5e1';
     }
     return { style };
@@ -568,6 +765,30 @@ const CalendarioFinal = () => {
     }
   };
 
+  const handleReprogramar = () => {
+    if (citaSeleccionada) {
+      setModalReprogramar({ isOpen: true, cita: citaSeleccionada });
+      setCitaSeleccionada(null);
+    }
+  };
+
+  const handleNoAsistio = async () => {
+    if (!citaSeleccionada) return;
+
+    // Si ya está marcado como NO_ASISTIO, revertir a CONFIRMADA
+    const esNoAsistio = citaSeleccionada.resource?.estado === 'NO_ASISTIO';
+    const result = esNoAsistio
+      ? await api.marcarAsistio(citaSeleccionada.id)
+      : await api.marcarNoAsistio(citaSeleccionada.id);
+
+    if (result.success) {
+      queryClient.invalidateQueries({ queryKey: ['citas'] });
+      setCitaSeleccionada(null);
+    } else {
+      alert(result.error || 'Error al actualizar estado de asistencia');
+    }
+  };
+
   const onSelectEvent = (event: EventoCalendario) => {
     if (vista === Views.MONTH) {
       setFecha(event.start);
@@ -580,7 +801,12 @@ const CalendarioFinal = () => {
   return (
     <div className="h-full w-full bg-slate-50 p-4 md:p-6 font-sans relative">
       {citaSeleccionada && (
-        <ModalDetalle event={citaSeleccionada} onClose={() => setCitaSeleccionada(null)} />
+        <ModalDetalle
+          event={citaSeleccionada}
+          onClose={() => setCitaSeleccionada(null)}
+          onReprogramar={handleReprogramar}
+          onNoAsistio={handleNoAsistio}
+        />
       )}
       <ModalNuevaCita
         isOpen={modalNuevaCita.isOpen}
@@ -588,6 +814,16 @@ const CalendarioFinal = () => {
         fechaInicial={modalNuevaCita.fecha}
         onSuccess={() => queryClient.invalidateQueries({ queryKey: ['citas'] })}
       />
+
+      {modalReprogramar.cita && (
+        <ModalReprogramar
+          isOpen={modalReprogramar.isOpen}
+          onClose={() => setModalReprogramar({ isOpen: false, cita: undefined })}
+          cita={modalReprogramar.cita}
+          onSuccess={() => queryClient.invalidateQueries({ queryKey: ['citas'] })}
+        />
+      )}
+
       <div key={vista} className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 p-6 h-[85vh] flex flex-col border border-slate-100 animate-tab-change">
         <Calendar
           culture='es' localizer={localizer} events={eventos}
