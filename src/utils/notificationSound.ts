@@ -1,10 +1,31 @@
-// Sonido de notificación simple usando Audio API
+// Sonido de notificación usando Web Audio API
 export const playNotificationSound = () => {
     try {
-        // Usar un sonido de sistema nativo
-        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZSA0PVqzn77BdGAg+ltrzxnMpBSl+zPLaizsIGGS57OihUBELTKXh8bllHAU2jdXzzn0vBSF1xe/glEQMEmS47d+iTw4MUKjm8bplGwU5kdny0IMxBh1rvu3mnU4ODlKk5O+0XxoHPJXYw');
-        audio.volume = 0.5;
-        audio.play().catch(err => console.log('Could not play sound:', err));
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+
+        // Crear oscilador para el tono
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        // Configurar el sonido
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        // Frecuencia del tono (Hz) - tono agradable
+        oscillator.frequency.value = 800;
+        oscillator.type = 'sine';
+
+        // Volumen
+        gainNode.gain.value = 0.3;
+
+        // Duración del beep
+        const now = audioContext.currentTime;
+        oscillator.start(now);
+
+        // Fade out suave
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        oscillator.stop(now + 0.2);
+
     } catch (error) {
         console.error('Error playing notification sound:', error);
     }
