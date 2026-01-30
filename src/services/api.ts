@@ -135,5 +135,26 @@ export const api = {
       console.error(error);
       return null;
     }
+  },
+
+  // Reprogramar cita
+  reprogramarCita: async (id: string, fecha: string, horario: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const response = await fetch(`${API_URL}/citas/${id}/reprogramar`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify({ fecha, horario })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        return { success: false, error: errorData.error || 'Error al reprogramar la cita' };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error(error);
+      return { success: false, error: 'Error de conexión' };
+    }
   }
 };
