@@ -70,10 +70,10 @@ const ModalDetalle = ({
 
   const getStatusColor = (estado?: string) => {
     switch (estado) {
-      case 'CONFIRMADA': return 'text-emerald-600 bg-emerald-50 border-emerald-200';
+      case 'CONFIRMADA': return 'text-green-700 bg-green-100 border-green-300';
       case 'VALIDAR': return 'text-amber-600 bg-amber-50 border-amber-200';
       case 'PENDIENTE_PAGO': return 'text-slate-500 bg-slate-50 border-slate-200';
-      case 'NO_ASISTIO': return 'text-gray-500 bg-gray-50 border-gray-300';
+      case 'NO_ASISTIO': return 'text-red-700 bg-red-100 border-red-300';
       default: return 'text-indigo-600 bg-indigo-50 border-indigo-200';
     }
   };
@@ -153,12 +153,19 @@ const ModalDetalle = ({
               Cerrar
             </button>
           </div>
-          {event.resource?.tipo === 'cita' && event.start < new Date() && event.resource?.estado !== 'NO_ASISTIO' && event.resource?.estado !== 'CANCELADA' && (
+          {event.resource?.tipo === 'cita' && event.start < new Date() && event.resource?.estado !== 'CANCELADA' && (
             <button
               onClick={onNoAsistio}
-              className="w-full mt-3 px-4 py-2 border border-gray-300 text-gray-600 font-medium rounded-lg hover:bg-gray-50 transition-all text-sm flex items-center gap-2 justify-center"
+              className={`w-full mt-3 px-4 py-2 border font-medium rounded-lg transition-all text-sm flex items-center gap-2 justify-center ${event.resource?.estado === 'NO_ASISTIO'
+                  ? 'border-green-300 text-green-700 hover:bg-green-50'
+                  : 'border-red-300 text-red-700 hover:bg-red-50'
+                }`}
             >
-              <X className="w-4 h-4" /> No Asistió
+              {event.resource?.estado === 'NO_ASISTIO' ? (
+                <><CheckCircle2 className="w-4 h-4" /> Marcar como Asistió</>
+              ) : (
+                <><X className="w-4 h-4" /> No Asistió</>
+              )}
             </button>
           )}
         </div>
@@ -728,12 +735,12 @@ const CalendarioFinal = () => {
     switch (event.resource?.estado) {
       case 'PENDIENTE_PAGO': style.backgroundColor = '#f8fafc'; style.borderLeft = '3px solid #94a3b8'; break;
       case 'VALIDAR': style.backgroundColor = '#fffbeb'; style.borderLeft = '3px solid #f59e0b'; break;
-      case 'CONFIRMADA': style.backgroundColor = '#ecfdf5'; style.borderLeft = '3px solid #10b981'; break;
+      case 'CONFIRMADA': style.backgroundColor = '#d1fae5'; style.borderLeft = '3px solid #059669'; break;
       case 'NO_ASISTIO':
-        style.backgroundColor = '#f9fafb';
-        style.borderLeft = '3px solid #9ca3af';
+        style.backgroundColor = '#fee2e2';
+        style.borderLeft = '3px solid #dc2626';
         style.textDecoration = 'line-through';
-        style.opacity = '0.7';
+        style.opacity = '0.8';
         break;
       default: style.backgroundColor = '#f1f5f9'; style.borderLeft = '3px solid #cbd5e1';
     }
@@ -768,13 +775,17 @@ const CalendarioFinal = () => {
   const handleNoAsistio = async () => {
     if (!citaSeleccionada) return;
 
-    const result = await api.marcarNoAsistio(citaSeleccionada.id);
+    // Si ya está marcado como NO_ASISTIO, revertir a CONFIRMADA
+    const esNoAsistio = citaSeleccionada.resource?.estado === 'NO_ASISTIO';
+    const result = esNoAsistio
+      ? await api.marcarAsistio(citaSeleccionada.id)
+      : await api.marcarNoAsistio(citaSeleccionada.id);
 
     if (result.success) {
       queryClient.invalidateQueries({ queryKey: ['citas'] });
       setCitaSeleccionada(null);
     } else {
-      alert(result.error || 'Error al marcar como no asistió');
+      alert(result.error || 'Error al actualizar estado de asistencia');
     }
   };
 
