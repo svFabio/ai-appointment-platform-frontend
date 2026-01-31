@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import QRCode from 'react-qr-code';
+import { io } from 'socket.io-client';
 
 interface WhatsappStatus {
   conectado: boolean;
@@ -9,7 +10,7 @@ interface WhatsappStatus {
 const AdminWhatsapp = () => {
   const [status, setStatus] = useState<WhatsappStatus>({ conectado: false, qr: null });
   const [loading, setLoading] = useState(true);
-  const [procesandoLogout, setProcesandoLogout] = useState(false); // Estado para bloquear el botón
+  const [procesandoLogout, setProcesandoLogout] = useState(false);
 
   const fetchStatus = async () => {
     try {
@@ -25,25 +26,49 @@ const AdminWhatsapp = () => {
 
   // Función para llamar al endpoint de logout
   const handleLogout = async () => {
-    if(!confirm("¿Estás seguro de que quieres desconectar el Bot?")) return;
-    
+    if (!confirm("¿Estás seguro de que quieres desconectar el Bot?")) return;
+
     setProcesandoLogout(true);
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
       await fetch(`${API_URL}/logout`, { method: 'POST' });
-        // No necesitamos hacer nada más, el polling (fetchStatus) detectará 
-        // automáticamente que se cayó la conexión y mostrará el nuevo QR.
     } catch (error) {
-        alert("Error al intentar desconectar");
+      alert("Error al intentar desconectar");
     } finally {
-        setProcesandoLogout(false);
+      setProcesandoLogout(false);
     }
   };
 
   useEffect(() => {
+    // Initial fetch
     fetchStatus();
-    const intervalo = setInterval(fetchStatus, 3000);
-    return () => clearInterval(intervalo);
+
+    // Setup Socket.IO for real-time updates
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    const urlBase = API_URL.replace('/api', '');
+
+    const socket = io(urlBase, {
+      transports: ['websocket', 'polling'],
+    });
+
+    socket.on('connect', () => {
+      console.log('✅ Socket.IO conectado para WhatsApp status');
+    });
+
+    // Listen for real-time WhatsApp status updates
+    socket.on('whatsapp-status', (data: WhatsappStatus) => {
+      console.log('📡 Estado WhatsApp actualizado en tiempo real:', data);
+      setStatus(data);
+      setLoading(false);
+    });
+
+    // Fallback: HTTP polling every 5 seconds (backup)
+    const intervalo = setInterval(fetchStatus, 5000);
+
+    return () => {
+      socket.disconnect();
+      clearInterval(intervalo);
+    };
   }, []);
 
   return (
@@ -67,7 +92,7 @@ const AdminWhatsapp = () => {
               <p className="text-sm md:text-base text-gray-600 mb-6 text-center max-w-md">
                 El sistema está escuchando mensajes correctamente.
               </p>
-              
+
               <button
                 onClick={handleLogout}
                 disabled={procesandoLogout}
@@ -92,7 +117,7 @@ const AdminWhatsapp = () => {
                     />
                   </div>
                   <p className="text-xs md:text-sm text-gray-400 text-center max-w-sm">
-                    El QR se actualiza automáticamente. Escanéalo con tu WhatsApp.
+                    El QR se actualiza automáticamente en tiempo real. Escanéalo con tu WhatsApp.
                   </p>
                 </>
               ) : (
@@ -110,7 +135,7 @@ const AdminWhatsapp = () => {
             </div>
           )}
         </div>
-        
+
         {/* Additional Info */}
         <div className="mt-6 text-center text-xs text-gray-500">
           <p>Para más ayuda, contacta al administrador del sistema</p>
