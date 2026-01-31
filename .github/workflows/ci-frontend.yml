@@ -14,16 +14,18 @@ jobs:
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
 
       - name: Instalar dependencias
         run: npm ci
 
+      # Nuevo paso: Verificar calidad de código (ESLint)
+      - name: Linting (Calidad de código)
+        run: npm run lint
+
       # Intentamos hacer el build de producción para ver si React explota
       - name: Test Build
-        # Le pasamos una URL falsa porque en el "build" no necesitamos conectar de verdad,
-        # solo verificar que el código compila.
         env:
           VITE_API_URL: "http://check-dummy-url"
         run: npm run build
