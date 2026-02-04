@@ -5,6 +5,7 @@ interface Usuario {
     id: number;
     nombre: string;
     email: string;
+    rol: 'ADMIN' | 'STAFF';
 }
 
 interface AuthContextType {
@@ -14,6 +15,7 @@ interface AuthContextType {
     login: (token: string, usuario: Usuario) => void;
     logout: () => void;
     isAuthenticated: boolean;
+    isAdmin: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -65,7 +67,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             loading,
             login,
             logout,
-            isAuthenticated: !!usuario
+            isAuthenticated: !!usuario,
+            isAdmin: () => usuario?.rol === 'ADMIN'
         }}>
             {children}
         </AuthContext.Provider>
