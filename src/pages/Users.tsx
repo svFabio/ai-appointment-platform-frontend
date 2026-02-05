@@ -28,7 +28,7 @@ const Users = () => {
     const fetchUsers = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users`, {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/users`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();
@@ -47,7 +47,7 @@ const Users = () => {
         try {
             if (editingUser) {
                 // Actualizar
-                await fetch(`${import.meta.env.VITE_API_URL}/api/users/${editingUser.id}`, {
+                await fetch(`${import.meta.env.VITE_API_URL}/users/${editingUser.id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -57,7 +57,7 @@ const Users = () => {
                 });
             } else {
                 // Crear
-                await fetch(`${import.meta.env.VITE_API_URL}/api/users`, {
+                await fetch(`${import.meta.env.VITE_API_URL}/users`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -79,7 +79,7 @@ const Users = () => {
 
         const token = localStorage.getItem('token');
         try {
-            await fetch(`${import.meta.env.VITE_API_URL}/api/users/${id}`, {
+            await fetch(`${import.meta.env.VITE_API_URL}/users/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
