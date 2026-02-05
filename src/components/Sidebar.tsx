@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
-import { X, LayoutDashboard, Calendar, CheckSquare, Smartphone } from 'lucide-react';
+import { X, LayoutDashboard, Calendar, CheckSquare, Smartphone, BarChart3, Users, LogOut } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 // Definimos qué propiedades recibe este componente
 interface SidebarProps {
@@ -9,6 +10,7 @@ interface SidebarProps {
 
 export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const location = useLocation(); // Hook para saber en qué URL estamos
+  const { isAdmin, logout } = useAuth(); // Hook para saber si es admin y cerrar sesión
 
   // Función auxiliar para saber si un link está activo
   const isActive = (path: string) => location.pathname === path;
@@ -65,11 +67,42 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
           <span className="font-medium">Vincular WhatsApp</span>
         </Link>
 
+        {/* Menús solo para ADMIN */}
+        {isAdmin() && (
+          <>
+            <div className="pt-4 pb-2 px-4">
+              <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Administración</p>
+            </div>
+
+            <Link to="/dashboard/statistics" onClick={onClose} className={linkClass('/dashboard/statistics')}>
+              <BarChart3 size={20} />
+              <span className="font-medium">Estadísticas</span>
+            </Link>
+
+            <Link to="/dashboard/users" onClick={onClose} className={linkClass('/dashboard/users')}>
+              <Users size={20} />
+              <span className="font-medium">Usuarios</span>
+            </Link>
+          </>
+        )}
+
       </nav>
 
-      {/* Footer */}
-      <div className="p-4 border-t border-slate-800 text-center text-xs text-gray-600 font-mono">
-        v1.0.0 PRO
+      {/* Footer con Botón de Cerrar Sesión */}
+      <div className="p-4 border-t border-slate-800">
+        <button
+          onClick={() => {
+            logout();
+            onClose();
+          }}
+          className="flex items-center gap-3 px-4 py-3 w-full text-left rounded text-red-400 hover:bg-slate-800 hover:text-red-300 transition-all duration-200"
+        >
+          <LogOut size={20} />
+          <span className="font-medium">Cerrar Sesión</span>
+        </button>
+        <div className="text-center text-xs text-gray-600 font-mono mt-4">
+          v1.0.0 PRO
+        </div>
       </div>
     </aside>
   );
