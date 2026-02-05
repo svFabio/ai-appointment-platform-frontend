@@ -118,7 +118,7 @@ const Users = () => {
     return (
         <div className="p-6">
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold text-slate-800">👥 Gestión de Usuarios</h1>
+                <h1 className="text-3xl font-bold text-slate-800">Gestión de Usuarios</h1>
                 <button
                     onClick={() => openModal()}
                     className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
