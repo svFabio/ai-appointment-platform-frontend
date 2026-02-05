@@ -9,6 +9,8 @@ import Calendario from './pages/Calendario';
 import Home from './pages/Home';
 import Vincular from './pages/Vincular';
 import Login from './pages/Login';
+import Statistics from './pages/Statistics';
+import Users from './pages/Users';
 import { NotificationToast } from './components/NotificationToast';
 import { useNotifications } from './hooks/useNotifications';
 import { playNotificationSound } from './utils/notificationSound';
@@ -87,6 +89,18 @@ function App() {
             <Route path="calendario" element={<Calendario />} />
             <Route path="pagos" element={<Pagos />} />
             <Route path="vincular" element={<Vincular />} />
+
+            {/* Rutas solo para ADMIN */}
+            <Route path="statistics" element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <Statistics />
+              </ProtectedRoute>
+            } />
+            <Route path="users" element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <Users />
+              </ProtectedRoute>
+            } />
           </Route>
 
           {/* 404 */}

@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
-import { X, LayoutDashboard, Calendar, CheckSquare, Smartphone } from 'lucide-react';
+import { X, LayoutDashboard, Calendar, CheckSquare, Smartphone, BarChart3, Users } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 // Definimos qué propiedades recibe este componente
 interface SidebarProps {
@@ -9,6 +10,7 @@ interface SidebarProps {
 
 export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const location = useLocation(); // Hook para saber en qué URL estamos
+  const { isAdmin } = useAuth(); // Hook para saber si es admin
 
   // Función auxiliar para saber si un link está activo
   const isActive = (path: string) => location.pathname === path;
@@ -64,6 +66,25 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
           <Smartphone size={20} />
           <span className="font-medium">Vincular WhatsApp</span>
         </Link>
+
+        {/* Menús solo para ADMIN */}
+        {isAdmin() && (
+          <>
+            <div className="pt-4 pb-2 px-4">
+              <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Administración</p>
+            </div>
+
+            <Link to="/dashboard/statistics" onClick={onClose} className={linkClass('/dashboard/statistics')}>
+              <BarChart3 size={20} />
+              <span className="font-medium">Estadísticas</span>
+            </Link>
+
+            <Link to="/dashboard/users" onClick={onClose} className={linkClass('/dashboard/users')}>
+              <Users size={20} />
+              <span className="font-medium">Usuarios</span>
+            </Link>
+          </>
+        )}
 
       </nav>
 
