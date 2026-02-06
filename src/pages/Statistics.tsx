@@ -28,8 +28,8 @@ const Statistics = () => {
             const headers = { 'Authorization': `Bearer ${token}` };
 
             const [overviewRes, revenueRes] = await Promise.all([
-                fetch(`${import.meta.env.VITE_API_URL}/api/statistics/overview`, { headers }),
-                fetch(`${import.meta.env.VITE_API_URL}/api/statistics/revenue?months=6`, { headers })
+                fetch(`${import.meta.env.VITE_API_URL}/statistics/overview`, { headers }),
+                fetch(`${import.meta.env.VITE_API_URL}/statistics/revenue?months=6`, { headers })
             ]);
 
             const overviewData = await overviewRes.json();
