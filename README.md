@@ -1,4 +1,5 @@
 # Frontend - Spa Appointment Admin Panel
+<img width="1282" height="671" alt="image" src="https://github.com/user-attachments/assets/9767c637-6283-4850-a30f-54e51db28177" />
 
 Web-based administrative panel for managing spa appointments, validating payments, and controlling the WhatsApp bot in real-time.
 
