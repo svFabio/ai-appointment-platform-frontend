@@ -54,10 +54,10 @@ function App() {
 
   return (
     <AuthProvider>
-      <div className="App">
+      <div className="App min-h-[100dvh] bg-slate-50">
         {/* Contenedor de notificaciones - Desktop: bottom-right, Mobile: top-center */}
-        <div className="fixed md:bottom-4 md:right-4 md:top-auto top-0 left-0 right-0 md:left-auto md:w-auto w-full z-[9999] pointer-events-none">
-          <div className="pointer-events-auto md:space-y-0 space-y-0">
+        <div className="fixed md:bottom-4 md:right-4 top-4 left-0 right-0 md:left-auto md:top-auto md:w-auto w-full z-[9999] pointer-events-none flex flex-col items-center md:items-end px-4 md:px-0 gap-2">
+          <div className="pointer-events-auto w-full max-w-sm">
             {notifications.map((notif) => (
               <NotificationToast
                 key={notif.id}
