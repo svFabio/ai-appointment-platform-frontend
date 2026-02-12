@@ -51,11 +51,10 @@ export const NotificationToast = ({ id, clienteNombre, fecha, horario, onDismiss
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
             className={`
-        bg-white rounded-xl shadow-2xl border-l-4 border-indigo-600 p-4 mb-3 
+        bg-white rounded-xl shadow-2xl border-l-4 border-indigo-600 p-4 
         transition-all duration-300 transform cursor-pointer hover:scale-105
-        ${isVisible ? 'translate-y-0 opacity-100' : 'md:translate-x-full -translate-y-full opacity-0'}
-        fixed md:static top-4 left-4 right-4 md:left-auto md:right-auto md:top-auto
-        z-50 max-w-sm w-full
+        ${isVisible ? 'translate-y-0 opacity-100' : 'translate-x-full opacity-0'}
+        w-full mb-3 pointer-events-auto
       `}
             onClick={handleClose}
         >
