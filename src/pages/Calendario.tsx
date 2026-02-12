@@ -157,8 +157,8 @@ const ModalDetalle = ({
             <button
               onClick={onNoAsistio}
               className={`w-full mt-3 px-4 py-2 border font-medium rounded-lg transition-all text-sm flex items-center gap-2 justify-center ${event.resource?.estado === 'NO_ASISTIO'
-                  ? 'border-green-300 text-green-700 hover:bg-green-50'
-                  : 'border-red-300 text-red-700 hover:bg-red-50'
+                ? 'border-green-300 text-green-700 hover:bg-green-50'
+                : 'border-red-300 text-red-700 hover:bg-red-50'
                 }`}
             >
               {event.resource?.estado === 'NO_ASISTIO' ? (
@@ -595,10 +595,10 @@ const CustomEventMonth = ({ event }: { event: EventoCalendario }) => {
 
 const CustomToolbar = ({ onNavigate, onView, view, label, onNuevaCita }: any) => {
   return (
-    <div className="flex flex-col md:flex-row items-center justify-between mb-4 pb-4 border-b border-slate-200 gap-4">
-      <div className="flex items-center gap-2">
+    <div className="flex flex-col md:flex-row items-center justify-between mb-2 md:mb-4 pb-2 md:pb-4 border-b border-slate-200 gap-3 md:gap-4">
+      <div className="flex items-center gap-2 w-full md:w-auto justify-between md:justify-start">
         <div className="flex items-center bg-white rounded-lg border border-slate-200 shadow-sm p-1">
-          <button onClick={() => onNavigate('PREV')} className="p-1.5 hover:bg-slate-100 rounded-md text-slate-600 transition-colors">
+          <button onClick={() => onNavigate('PREV')} className="p-1 md:p-1.5 hover:bg-slate-100 rounded-md text-slate-600 transition-colors">
             <ChevronLeft className="w-5 h-5" />
           </button>
           <button onClick={() => onNavigate('TODAY')} className="px-3 py-1 text-sm font-bold text-slate-700 hover:bg-slate-100 rounded-md mx-1 transition-colors">
@@ -611,26 +611,26 @@ const CustomToolbar = ({ onNavigate, onView, view, label, onNuevaCita }: any) =>
         <h2 className="text-xl font-bold text-slate-800 ml-2 capitalize font-sans">{label}</h2>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 md:gap-3 w-full md:w-auto justify-between md:justify-end">
         <button
           onClick={onNuevaCita}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg shadow-indigo-200 hover:scale-105 active:scale-95"
+          className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 md:px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg shadow-indigo-200 text-sm md:text-base"
         >
-          <Plus className="w-4 h-4" /> Nueva Cita
+          <Plus className="w-4 h-4" /> <span className="whitespace-nowrap">Nueva Cita</span>
         </button>
 
-        <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
+        <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200 shrink-0">
           <button
             onClick={() => onView(Views.MONTH)}
-            className={`flex items-center gap-2 px-4 py-1.5 text-sm font-semibold rounded-md transition-all ${view === Views.MONTH ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-1.5 text-xs md:text-sm font-semibold rounded-md transition-all ${view === Views.MONTH ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
           >
-            <LayoutGrid className="w-4 h-4" /> <span>Mes</span>
+            <LayoutGrid className="w-3 h-3 md:w-4 md:h-4" /> <span>Mes</span>
           </button>
           <button
             onClick={() => onView(Views.DAY)}
-            className={`flex items-center gap-2 px-4 py-1.5 text-sm font-semibold rounded-md transition-all ${view === Views.DAY ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-1.5 text-xs md:text-sm font-semibold rounded-md transition-all ${view === Views.DAY ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
           >
-            <Clock className="w-4 h-4" /> <span>Día</span>
+            <Clock className="w-3 h-3 md:w-4 md:h-4" /> <span>Día</span>
           </button>
         </div>
       </div>
@@ -824,7 +824,7 @@ const CalendarioFinal = () => {
         />
       )}
 
-      <div key={vista} className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 p-6 h-[85vh] flex flex-col border border-slate-100 animate-tab-change">
+      <div key={vista} className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 p-4 md:p-6 h-[calc(100dvh-140px)] md:h-[calc(100dvh-120px)] flex flex-col border border-slate-100 animate-tab-change">
         <Calendar
           culture='es' localizer={localizer} events={eventos}
           startAccessor="start" endAccessor="end" style={{ height: '100%' }}
