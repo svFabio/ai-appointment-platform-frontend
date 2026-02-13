@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Lock, Mail, Loader2, AlertCircle, Sparkles } from 'lucide-react';
+import { Lock, Mail, Loader2, AlertCircle, ArrowRight, ShieldCheck } from 'lucide-react';
 import { api } from '../services/api';
 
 const Login = () => {
@@ -33,81 +33,83 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
-            style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary), #1e1b4b)' }}
-        >
-            {/* Animated background orbs */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full opacity-20 animate-gradient"
-                    style={{ background: 'radial-gradient(circle, var(--color-primary-light), transparent)' }} />
-                <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full opacity-15 animate-gradient"
-                    style={{ background: 'radial-gradient(circle, var(--color-secondary-light), transparent)', animationDelay: '4s' }} />
-            </div>
-
-            <div className="glass-card w-full max-w-md overflow-hidden shadow-2xl relative z-10"
-                style={{ background: 'rgba(255, 255, 255, 0.95)' }}
-            >
+        <div className="min-h-screen flex items-center justify-center p-4 bg-slate-100 font-sans">
+            <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
                 {/* Header */}
-                <div className="gradient-primary p-8 text-center animate-gradient" style={{ backgroundSize: '200% 200%' }}>
-                    <div className="w-16 h-16 bg-white/20 backdrop-blur rounded-2xl mx-auto flex items-center justify-center mb-4 shadow-lg border border-white/30">
-                        <Sparkles className="w-8 h-8 text-white" />
+                <div className="px-8 pt-10 pb-6 text-center">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-slate-900 text-white mb-6 shadow-lg shadow-slate-900/20">
+                        <ShieldCheck className="w-6 h-6" />
                     </div>
-                    <h2 className="text-2xl font-bold text-white">Panel Administrativo</h2>
-                    <p className="text-white/70 mt-2 text-sm">Ingresa tus credenciales para continuar</p>
+                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Acceso Administrativo</h1>
+                    <p className="text-slate-500 mt-2 text-sm font-medium">Ingresa tus credenciales para continuar</p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-8 space-y-6">
-                    {error && (
-                        <div className="p-4 bg-danger-light border border-danger/20 rounded-xl text-danger text-sm flex items-start gap-3">
-                            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-                            <span>{error}</span>
-                        </div>
-                    )}
-
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-semibold text-txt mb-1.5">Email</label>
-                            <div className="relative">
-                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-txt-muted" />
-                                <input
-                                    type="email"
-                                    required
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="input-modern pl-10"
-                                    placeholder="admin@ejemplo.com"
-                                />
+                {/* Form */}
+                <div className="px-8 pb-10">
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        {error && (
+                            <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded-lg text-red-700 text-sm flex items-start gap-3">
+                                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                                <span className="font-medium">{error}</span>
                             </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-semibold text-txt mb-1.5">Contraseña</label>
-                            <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-txt-muted" />
-                                <input
-                                    type="password"
-                                    required
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="input-modern pl-10"
-                                    placeholder="••••••••"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="btn-primary w-full py-3.5 text-base"
-                    >
-                        {loading ? (
-                            <><Loader2 className="w-5 h-5 animate-spin" /> Verificando...</>
-                        ) : (
-                            'Iniciar Sesión'
                         )}
-                    </button>
-                </form>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
+                                    Correo Electrónico
+                                </label>
+                                <div className="relative group">
+                                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-slate-800 transition-colors" />
+                                    <input
+                                        type="email"
+                                        required
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        className="w-full py-3 pl-11 pr-4 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-sm placeholder:text-slate-400 focus:bg-white focus:border-slate-900 focus:ring-1 focus:ring-slate-900 transition-all outline-none font-medium"
+                                        placeholder="usuario@empresa.com"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
+                                    Contraseña
+                                </label>
+                                <div className="relative group">
+                                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-slate-800 transition-colors" />
+                                    <input
+                                        type="password"
+                                        required
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        className="w-full py-3 pl-11 pr-4 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-sm placeholder:text-slate-400 focus:bg-white focus:border-slate-900 focus:ring-1 focus:ring-slate-900 transition-all outline-none font-medium"
+                                        placeholder="••••••••"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-lg transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-slate-900/20"
+                        >
+                            {loading ? (
+                                <><Loader2 className="w-5 h-5 animate-spin" /> Verificando...</>
+                            ) : (
+                                <>Iniciar Sesión <ArrowRight className="w-5 h-5" /></>
+                            )}
+                        </button>
+                    </form>
+                </div>
+
+                {/* Footer */}
+                <div className="bg-slate-50 px-8 py-4 border-t border-slate-100 text-center">
+                    <p className="text-xs text-slate-400 font-medium">
+                        Sistema de Automatización &copy; {new Date().getFullYear()}
+                    </p>
+                </div>
             </div>
         </div>
     );

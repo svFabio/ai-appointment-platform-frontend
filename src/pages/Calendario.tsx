@@ -834,25 +834,28 @@ const Calendario = () => {
           events={eventos}
           startAccessor="start"
           endAccessor="end"
-          style={{ height: '100%' }}
-          view={vista}
-          date={fecha}
-          onNavigate={setFecha}
-          onView={setVista}
-          onSelectSlot={handleSelectSlot}
-          onSelectEvent={handleSelectEvent}
-          selectable
+          style={{ height: 'calc(100vh - 220px)' }}
+          view={vista} // Controlado
+          onView={setVista} // Controlado
+          date={fecha} // Controlado
+          onNavigate={setFecha} // Controlado
+          culture='es'
           components={{
-            toolbar: (props) => <CustomToolbar {...props} onNuevaCita={() => abrirModalNuevaCita()} />,
-            month: { event: CustomEventMonth },
-            day: { event: CustomEventDay }
+            event: vista === Views.MONTH ? CustomEventMonth : CustomEventDay,
+            toolbar: (props) => (
+              <CustomToolbar
+                {...props}
+                onNuevaCita={() => abrirModalNuevaCita()}
+              />
+            )
           }}
+          onSelectEvent={handleSelectEvent}
+          onSelectSlot={handleSelectSlot}
           eventPropGetter={eventStyleGetter}
+          selectable
           messages={{
-            noEventsInRange: 'No hay citas en este rango',
-            allDay: 'Todo el día',
-            previous: 'Anterior',
             next: 'Siguiente',
+            previous: 'Anterior',
             today: 'Hoy',
             month: 'Mes',
             week: 'Semana',
@@ -861,7 +864,7 @@ const Calendario = () => {
             date: 'Fecha',
             time: 'Hora',
             event: 'Evento',
-            showMore: total => `+ Ver más (${total})`
+            noEventsInRange: 'No hay citas en este rango',
           }}
         />
       </div>
