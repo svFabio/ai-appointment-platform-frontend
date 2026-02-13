@@ -20,7 +20,10 @@ import {
   User,
   Timer,
   Plus,
-  Loader2
+  Loader2,
+  Star,
+  Sparkles,
+  Bell
 } from 'lucide-react';
 import { api } from '../services/api';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
@@ -43,6 +46,11 @@ interface RecursoEvento {
   telefono?: string;
   tipo?: 'resumen' | 'cita';
   count?: number;
+  servicio?: string;
+  rating?: number;
+  comentario?: string;
+  recordatorio24h?: boolean;
+  recordatorio1h?: boolean;
 }
 
 interface EventoCalendario {
@@ -127,6 +135,38 @@ const ModalDetalle = ({
             </div>
           </div>
 
+          <div className="flex items-start gap-3">
+            <div className="p-2 bg-purple-50 rounded-lg text-purple-600">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Servicio</p>
+              <p className="font-medium text-slate-700">{event.resource?.servicio || 'Spa Tradicional'}</p>
+            </div>
+          </div>
+
+          {event.resource?.rating && (
+            <div className="flex items-start gap-3 bg-yellow-50 p-3 rounded-lg border border-yellow-100">
+              <div className="p-1 bg-yellow-100 rounded-full text-yellow-600">
+                <Star className="w-4 h-4 fill-current" />
+              </div>
+              <div>
+                <p className="text-xs text-yellow-700 font-semibold uppercase tracking-wider">Feedback del Cliente</p>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <span className="font-bold text-yellow-800">{event.resource.rating}/5</span>
+                  <div className="flex">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star key={i} className={`w-3 h-3 ${i < (event.resource?.rating || 0) ? 'fill-yellow-500 text-yellow-500' : 'text-yellow-300'}`} />
+                    ))}
+                  </div>
+                </div>
+                {event.resource.comentario && (
+                  <p className="text-sm text-slate-600 mt-1 italic">"{event.resource.comentario}"</p>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className={`mt-4 p-3 rounded-xl border ${statusClass} flex items-center justify-center gap-2`}>
             {event.resource?.estado === 'CONFIRMADA' && <CheckCircle2 className="w-5 h-5" />}
             {event.resource?.estado === 'VALIDAR' && <AlertCircle className="w-5 h-5" />}
@@ -157,8 +197,8 @@ const ModalDetalle = ({
             <button
               onClick={onNoAsistio}
               className={`w-full mt-3 px-4 py-2 border font-medium rounded-lg transition-all text-sm flex items-center gap-2 justify-center ${event.resource?.estado === 'NO_ASISTIO'
-                  ? 'border-green-300 text-green-700 hover:bg-green-50'
-                  : 'border-red-300 text-red-700 hover:bg-red-50'
+                ? 'border-green-300 text-green-700 hover:bg-green-50'
+                : 'border-red-300 text-red-700 hover:bg-red-50'
                 }`}
             >
               {event.resource?.estado === 'NO_ASISTIO' ? (
@@ -175,9 +215,11 @@ const ModalDetalle = ({
 };
 
 // --- 3.5 Componente MODAL NUEVA CITA ---
+// --- 3.5 Componente MODAL NUEVA CITA ---
 interface DatosNuevaCita {
   clienteNombre: string;
   clienteTelefono: string;
+  servicio: string;
   fecha: string;
   horario: string;
 }
@@ -196,6 +238,7 @@ const ModalNuevaCita = ({
   const [formData, setFormData] = useState<DatosNuevaCita>({
     clienteNombre: '',
     clienteTelefono: '',
+    servicio: 'Spa',
     fecha: fechaInicial ? format(fechaInicial, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
     horario: ''
   });
@@ -256,7 +299,7 @@ const ModalNuevaCita = ({
 
     if (result.success) {
       // Limpiar formulario
-      setFormData({ clienteNombre: '', clienteTelefono: '', fecha: format(new Date(), 'yyyy-MM-dd'), horario: '' });
+      setFormData({ clienteNombre: '', clienteTelefono: '', servicio: 'Spa', fecha: format(new Date(), 'yyyy-MM-dd'), horario: '' });
       onSuccess();
       onClose();
     } else {
@@ -266,14 +309,14 @@ const ModalNuevaCita = ({
 
   const handleClose = () => {
     setError(null);
-    setFormData({ clienteNombre: '', clienteTelefono: '', fecha: format(new Date(), 'yyyy-MM-dd'), horario: '' });
+    setFormData({ clienteNombre: '', clienteTelefono: '', servicio: 'Spa', fecha: format(new Date(), 'yyyy-MM-dd'), horario: '' });
     onClose();
   };
 
   // Handler para teléfono (solo números)
   const handleTelefonoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const valor = e.target.value.replace(/\D/g, ''); // Eliminar todo lo que no sea número
-    setFormData(prev => ({ ...prev, clienteTelefono: valor }));
+    setFormData((prev: DatosNuevaCita) => ({ ...prev, clienteTelefono: valor }));
   };
 
   if (!isOpen) return null;
@@ -306,7 +349,7 @@ const ModalNuevaCita = ({
                 type="text"
                 required
                 value={formData.clienteNombre}
-                onChange={(e) => setFormData(prev => ({ ...prev, clienteNombre: e.target.value }))}
+                onChange={(e) => setFormData((prev: DatosNuevaCita) => ({ ...prev, clienteNombre: e.target.value }))}
                 className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                 placeholder="Ej: Juan Pérez"
               />
@@ -330,6 +373,25 @@ const ModalNuevaCita = ({
           </div>
 
           <div>
+            <label className="block text-sm font-semibold text-slate-600 mb-1">Servicio</label>
+            <div className="grid grid-cols-3 gap-2">
+              {['Spa', 'Masaje', 'Facial'].map((srv) => (
+                <button
+                  key={srv}
+                  type="button"
+                  onClick={() => setFormData((prev: DatosNuevaCita) => ({ ...prev, servicio: srv }))}
+                  className={`py-2 px-1 rounded-lg text-sm font-medium transition-all border ${formData.servicio === srv
+                    ? 'bg-purple-100 border-purple-300 text-purple-700 shadow-sm'
+                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                    }`}
+                >
+                  {srv}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
             <label className="block text-sm font-semibold text-slate-600 mb-1">Fecha *</label>
             <div className="relative">
               <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -337,7 +399,7 @@ const ModalNuevaCita = ({
                 type="date"
                 required
                 value={formData.fecha}
-                onChange={(e) => setFormData(prev => ({ ...prev, fecha: e.target.value }))}
+                onChange={(e) => setFormData((prev: DatosNuevaCita) => ({ ...prev, fecha: e.target.value }))}
                 min={format(new Date(), 'yyyy-MM-dd')}
                 className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
               />
@@ -360,7 +422,7 @@ const ModalNuevaCita = ({
                   <button
                     key={h}
                     type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, horario: h }))}
+                    onClick={() => setFormData((prev: DatosNuevaCita) => ({ ...prev, horario: h }))}
                     className={`py-2.5 px-3 rounded-lg font-semibold text-sm transition-all ${formData.horario === h
                       ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -568,9 +630,22 @@ const CustomEventDay = ({ event }: { event: EventoCalendario }) => {
     <div className="flex flex-col h-full justify-center px-2 hover:bg-slate-50/50 transition-colors rounded">
       <div className="flex items-center gap-1.5">
         {getIcon()}
-        <span className="text-xs font-bold truncate leading-tight text-slate-700">
+        <span className="text-xs font-bold truncate leading-tight text-slate-700 flex-1">
           {title}
         </span>
+        {/* Indicadores de recordatorio (Solo vista DIA) */}
+        <div className="flex gap-0.5">
+          {resource?.recordatorio24h && (
+            <span title="Recordatorio 24h enviado" className="text-[10px] text-blue-500">
+              <Bell className="w-3 h-3 fill-current" />
+            </span>
+          )}
+          {resource?.recordatorio1h && (
+            <span title="Recordatorio 1h enviado" className="text-[10px] text-orange-500">
+              <Bell className="w-3 h-3" />
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -714,7 +789,12 @@ const CalendarioFinal = () => {
         resource: {
           tipo: 'cita' as const,
           estado: cita.estado,
-          telefono: cita.clienteTelefono
+          telefono: cita.clienteTelefono,
+          servicio: cita.servicio,
+          rating: cita.rating,
+          comentario: cita.comentario,
+          recordatorio24h: cita.recordatorio24h,
+          recordatorio1h: cita.recordatorio1h
         }
       };
     });
