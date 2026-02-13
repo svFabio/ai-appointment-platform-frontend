@@ -8,6 +8,8 @@ interface CitaResumen {
   clienteTelefono: string;
   horario: string; // OJO: Debe llamarse 'horario', no 'hora'
   estado: string;
+  servicio?: string;
+  rating?: number;
 }
 
 interface ResumenData {
@@ -88,6 +90,7 @@ const Dashboard = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Hora</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Servicio</th>
                 <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
                 <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
               </tr>
@@ -105,6 +108,12 @@ const Dashboard = () => {
                   <tr key={cita.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 font-semibold text-gray-800">
                       {cita.horario}
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <span className="px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-800 rounded-md border border-purple-200">
+                        {cita.servicio || 'Spa'}
+                      </span>
                     </td>
 
                     <td className="px-6 py-4">
@@ -156,6 +165,9 @@ const Dashboard = () => {
                           : cita.clienteTelefono}
                       </p>
                     )}
+                    <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-medium bg-purple-50 text-purple-700 rounded border border-purple-100">
+                      {cita.servicio || 'Spa'}
+                    </span>
                   </div>
                   <span className={`px-2 py-1 text-xs rounded-full font-semibold ${cita.estado === 'CONFIRMADA' ? 'bg-green-100 text-green-800' :
                     cita.estado === 'VALIDACION_PENDIENTE' ? 'bg-orange-100 text-orange-800' :
