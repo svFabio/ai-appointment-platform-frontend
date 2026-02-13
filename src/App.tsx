@@ -11,6 +11,7 @@ import Vincular from './pages/Vincular';
 import Login from './pages/Login';
 import Statistics from './pages/Statistics';
 import Users from './pages/Users';
+import Chat from './pages/Chat';
 import { NotificationToast } from './components/NotificationToast';
 import { useNotifications } from './hooks/useNotifications';
 import { playNotificationSound } from './utils/notificationSound';
@@ -88,6 +89,7 @@ function App() {
             <Route index element={<Home />} />
             <Route path="calendario" element={<Calendario />} />
             <Route path="pagos" element={<Pagos />} />
+            <Route path="chat" element={<Chat />} />
             <Route path="vincular" element={<Vincular />} />
 
             {/* Rutas solo para ADMIN */}

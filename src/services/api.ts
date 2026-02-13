@@ -194,5 +194,67 @@ export const api = {
       console.error(error);
       return { success: false, error: 'Error de conexión' };
     }
+  },
+
+  // --- DESCRIPCIÓN ---
+  actualizarDescripcion: async (id: string, descripcion: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const response = await fetch(`${API_URL}/citas/${id}/descripcion`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify({ descripcion })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        return { success: false, error: errorData.error || 'Error al actualizar descripción' };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error(error);
+      return { success: false, error: 'Error de conexión' };
+    }
+  },
+
+  // --- CHAT ---
+  obtenerConversaciones: async () => {
+    try {
+      const response = await fetch(`${API_URL}/chat/conversaciones`, { headers: getHeaders() });
+      if (!response.ok) return [];
+      return await response.json();
+    } catch {
+      return [];
+    }
+  },
+
+  obtenerMensajes: async (jid: string) => {
+    try {
+      const response = await fetch(`${API_URL}/chat/mensajes/${encodeURIComponent(jid)}`, { headers: getHeaders() });
+      if (!response.ok) return [];
+      return await response.json();
+    } catch {
+      return [];
+    }
+  },
+
+  enviarMensajeChat: async (jid: string, texto: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const response = await fetch(`${API_URL}/chat/enviar/${encodeURIComponent(jid)}`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ texto })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        return { success: false, error: errorData.error || 'Error al enviar mensaje' };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error(error);
+      return { success: false, error: 'Error de conexión' };
+    }
   }
 };
