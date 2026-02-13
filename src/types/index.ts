@@ -10,6 +10,11 @@ export interface Cita {
   estado: EstadoCita;
   comprobanteUrl?: string; // URL de la imagen del pago
   creadoEn: string;
+  servicio?: string;
+  rating?: number;
+  comentario?: string;
+  recordatorio24h?: boolean;
+  recordatorio1h?: boolean;
 }
 
 export interface Horario {
