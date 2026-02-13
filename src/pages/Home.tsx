@@ -11,6 +11,8 @@ interface CitaResumen {
   clienteTelefono: string;
   horario: string;
   estado: string;
+  servicio?: string;
+  rating?: number;
 }
 
 interface ResumenData {
@@ -132,6 +134,7 @@ const Dashboard = () => {
             <thead>
               <tr className="bg-surface-elevated/50">
                 <th className="px-6 py-3 text-[11px] font-semibold text-txt-muted uppercase tracking-wider">Hora</th>
+                <th className="px-6 py-3 text-[11px] font-semibold text-txt-muted uppercase tracking-wider">Servicio</th>
                 <th className="px-6 py-3 text-[11px] font-semibold text-txt-muted uppercase tracking-wider">Cliente</th>
                 <th className="px-6 py-3 text-[11px] font-semibold text-txt-muted uppercase tracking-wider">Estado</th>
               </tr>
@@ -139,7 +142,7 @@ const Dashboard = () => {
             <tbody className="divide-y divide-border-light">
               {data.proximasCitas.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="px-6 py-10 text-center text-txt-muted">
+                  <td colSpan={4} className="px-6 py-10 text-center text-txt-muted">
                     <CheckCircle2 className="w-10 h-10 mx-auto text-success/40 mb-2" />
                     <p className="font-medium">No hay citas programadas para hoy</p>
                   </td>
@@ -149,6 +152,11 @@ const Dashboard = () => {
                   <tr key={cita.id} className="hover:bg-surface-alt/50 transition-colors">
                     <td className="px-6 py-3.5">
                       <span className="font-mono font-semibold text-txt text-sm">{cita.horario}</span>
+                    </td>
+                    <td className="px-6 py-3.5">
+                      <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-secondary-light/30 text-secondary border border-secondary/20">
+                        {cita.servicio || 'Spa'}
+                      </span>
                     </td>
                     <td className="px-6 py-3.5">
                       {cita.clienteNombre ? (
@@ -163,8 +171,8 @@ const Dashboard = () => {
                     </td>
                     <td className="px-6 py-3.5">
                       <span className={`badge ${cita.estado === 'CONFIRMADA' ? 'badge-success' :
-                          cita.estado === 'VALIDACION_PENDIENTE' ? 'badge-warning' :
-                            'badge-info'
+                        cita.estado === 'VALIDACION_PENDIENTE' ? 'badge-warning' :
+                          'badge-info'
                         }`}>
                         {cita.estado}
                       </span>
@@ -173,45 +181,50 @@ const Dashboard = () => {
                 ))
               )}
             </tbody>
-          </table>
-        </div>
+          </table >
+        </div >
 
         {/* Mobile Cards */}
-        <div className="md:hidden divide-y divide-border-light">
-          {data.proximasCitas.length === 0 ? (
-            <div className="px-4 py-10 text-center text-txt-muted">
-              <CheckCircle2 className="w-10 h-10 mx-auto text-success/40 mb-2" />
-              <p className="font-medium">No hay citas programadas para hoy</p>
-            </div>
-          ) : (
-            data.proximasCitas.map((cita) => (
-              <div key={cita.id} className="p-4 hover:bg-surface-alt/50 transition-colors">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-mono font-semibold text-txt text-sm">{cita.horario}</p>
-                    {cita.clienteNombre ? (
-                      <p className="text-sm text-txt-secondary capitalize mt-0.5">{cita.clienteNombre}</p>
-                    ) : (
-                      <p className="text-sm text-txt-muted font-mono mt-0.5">
-                        {cita.clienteTelefono.length > 15
-                          ? cita.clienteTelefono.substring(0, 8) + '...'
-                          : cita.clienteTelefono}
-                      </p>
-                    )}
-                  </div>
-                  <span className={`badge ${cita.estado === 'CONFIRMADA' ? 'badge-success' :
+        < div className="md:hidden divide-y divide-border-light" >
+          {
+            data.proximasCitas.length === 0 ? (
+              <div className="px-4 py-10 text-center text-txt-muted">
+                <CheckCircle2 className="w-10 h-10 mx-auto text-success/40 mb-2" />
+                <p className="font-medium">No hay citas programadas para hoy</p>
+              </div>
+            ) : (
+              data.proximasCitas.map((cita) => (
+                <div key={cita.id} className="p-4 hover:bg-surface-alt/50 transition-colors">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-mono font-semibold text-txt text-sm">{cita.horario}</p>
+                      {cita.clienteNombre ? (
+                        <p className="text-sm text-txt-secondary capitalize mt-0.5">{cita.clienteNombre}</p>
+                      ) : (
+                        <p className="text-sm text-txt-muted font-mono mt-0.5">
+                          {cita.clienteTelefono.length > 15
+                            ? cita.clienteTelefono.substring(0, 8) + '...'
+                            : cita.clienteTelefono}
+                        </p>
+                      )}
+                      <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-medium bg-purple-50 text-purple-700 rounded border border-purple-100">
+                        {cita.servicio || 'Spa'}
+                      </span>
+                    </div>
+                    <span className={`badge ${cita.estado === 'CONFIRMADA' ? 'badge-success' :
                       cita.estado === 'VALIDACION_PENDIENTE' ? 'badge-warning' :
                         'badge-info'
-                    }`}>
-                    {cita.estado}
-                  </span>
+                      }`}>
+                      {cita.estado}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-    </div>
+              ))
+            )
+          }
+        </div >
+      </div >
+    </div >
   );
 };
 

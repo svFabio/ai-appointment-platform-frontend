@@ -29,7 +29,7 @@ import {
 } from 'lucide-react';
 import { api } from '../services/api';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
-import '../index.css';
+import '../index.css'; // Asegura cargar los estilos
 
 // --- 1. Configuración Regional ---
 const locales = { 'es': es };
@@ -241,8 +241,8 @@ const ModalDetalle = ({
             <button
               onClick={onNoAsistio}
               className={`w-full py-2.5 border rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${event.resource?.estado === 'NO_ASISTIO'
-                  ? 'border-success text-success bg-success-light/20 hover:bg-success-light/40'
-                  : 'border-danger/30 text-danger bg-danger-light/20 hover:bg-danger-light/40'
+                ? 'border-success text-success bg-success-light/20 hover:bg-success-light/40'
+                : 'border-danger/30 text-danger bg-danger-light/20 hover:bg-danger-light/40'
                 }`}
             >
               {event.resource?.estado === 'NO_ASISTIO' ? (
@@ -617,41 +617,54 @@ const ModalReprogramar = ({
   );
 };
 
+
 // --- 4. Componentes Visuales del Calendario ---
 const CustomEventDay = ({ event }: { event: EventoCalendario }) => {
   const { title, resource } = event;
   const getIcon = () => {
     switch (resource?.estado) {
-      case 'CONFIRMADA': return <CheckCircle2 className="w-3.5 h-3.5 text-success" />;
-      case 'VALIDAR': return <AlertCircle className="w-3.5 h-3.5 text-warning" />;
-      case 'PENDIENTE_PAGO': return <Banknote className="w-3.5 h-3.5 text-info" />;
-      default: return <CalendarIcon className="w-3.5 h-3.5 text-primary" />;
+      case 'CONFIRMADA': return <CheckCircle2 className="w-3 h-3 text-success" />;
+      case 'VALIDAR': return <AlertCircle className="w-3 h-3 text-warning" />;
+      case 'PENDIENTE_PAGO': return <Banknote className="w-3 h-3 text-info" />;
+      default: return <CalendarIcon className="w-3 h-3 text-primary" />;
     }
   };
+
+  const getBorderColor = () => {
+    switch (resource?.estado) {
+      case 'CONFIRMADA': return 'bg-success/10 border-success';
+      case 'VALIDAR': return 'bg-warning/10 border-warning';
+      case 'PENDIENTE_PAGO': return 'bg-info/10 border-info';
+      default: return 'bg-surface-elevated border-primary';
+    }
+  };
+
   return (
-    <div className="flex flex-col h-full justify-center px-2 hover:bg-surface-elevated/50 transition-colors rounded-md border-l-2 border-primary/20">
+    <div className={`flex flex-col h-full justify-center px-2 transition-all rounded-md border-l-[3px] ${getBorderColor()} hover:brightness-95`}>
       <div className="flex items-center gap-1.5">
         {getIcon()}
-        <span className="text-xs font-bold truncate leading-tight text-txt-secondary">
+        <span className="text-xs font-bold truncate leading-tight text-txt">
           {title}
         </span>
       </div>
+      {resource?.servicio && (
+        <span className="text-[10px] text-txt-secondary truncate ml-4.5 opacity-80">
+          {resource.servicio}
+        </span>
+      )}
     </div>
   );
 };
 
 const CustomEventMonth = ({ event }: { event: EventoCalendario }) => {
-  const count = event.resource?.count || 0;
   return (
     <div className="flex items-center justify-center h-full w-full">
-      <span className="hidden md:block text-xs font-semibold tracking-wide truncate px-1 text-txt-secondary">
-        {event.title}
+      <span className="hidden md:flex items-center w-full px-1.5 py-0.5 rounded-md bg-surface-elevated/50 border border-border/50 text-[10px] font-semibold text-txt-secondary hover:bg-surface-elevated transition-colors truncate gap-1">
+        <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+        <span className="truncate">{event.title}</span>
       </span>
-      <div className="md:hidden flex items-center justify-center gap-0.5 flex-wrap px-0.5 h-full content-center">
-        {Array.from({ length: Math.min(count, 4) }).map((_, i) => (
-          <div key={i} className="w-1.5 h-1.5 rounded-full bg-primary shadow-sm" />
-        ))}
-        {count > 4 && <span className="text-[10px] text-primary font-bold leading-none">+</span>}
+      <div className="md:hidden flex items-center justify-center w-full h-full">
+        <span className="w-2 h-2 rounded-full bg-primary/80" />
       </div>
     </div>
   );
@@ -661,11 +674,11 @@ const CustomToolbar = ({ onNavigate, onView, view, label, onNuevaCita }: any) =>
   return (
     <div className="flex flex-col md:flex-row items-center justify-between mb-6 pb-4 border-b border-border gap-4">
       <div className="flex items-center gap-3">
-        <div className="flex items-center bg-surface rounded-xl border border-border shadow-sm p-1">
+        <div className="flex items-center bg-surface p-1 rounded-xl border border-border shadow-sm">
           <button onClick={() => onNavigate('PREV')} className="p-1.5 hover:bg-surface-elevated rounded-lg text-txt-secondary transition-colors">
             <ChevronLeft className="w-5 h-5" />
           </button>
-          <button onClick={() => onNavigate('TODAY')} className="px-3 py-1.5 text-sm font-bold text-txt hover:bg-surface-elevated rounded-lg mx-1 transition-colors">
+          <button onClick={() => onNavigate('TODAY')} className="px-3 py-1.5 text-xs font-bold text-txt hover:bg-surface-elevated rounded-lg mx-1 transition-colors uppercase tracking-wider">
             Hoy
           </button>
           <button onClick={() => onNavigate('NEXT')} className="p-1.5 hover:bg-surface-elevated rounded-lg text-txt-secondary transition-colors">
@@ -680,19 +693,25 @@ const CustomToolbar = ({ onNavigate, onView, view, label, onNuevaCita }: any) =>
           onClick={onNuevaCita}
           className="btn-primary shadow-lg shadow-primary/25"
         >
-          <Plus className="w-4 h-4" /> Nueva Cita
+          <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Nueva Cita</span><span className="sm:hidden">Nueva</span>
         </button>
 
-        <div className="flex bg-surface-elevated p-1 rounded-xl border border-border">
+        <div className="flex bg-surface-elevated p-1 rounded-xl border border-border relative">
+          <div
+            className={`absolute top-1 bottom-1 rounded-lg bg-surface shadow-sm transition-all duration-300 ease-out border border-border/50 ${view === Views.MONTH ? 'left-1 w-[calc(50%-4px)]' : 'left-[50%] w-[calc(50%-4px)]'
+              }`}
+          />
           <button
             onClick={() => onView(Views.MONTH)}
-            className={`flex items-center gap-2 px-4 py-1.5 text-sm font-bold rounded-lg transition-all ${view === Views.MONTH ? 'bg-white text-primary shadow-sm' : 'text-txt-muted hover:text-txt'}`}
+            className={`relative z-10 flex items-center gap-2 px-4 py-1.5 text-sm font-bold rounded-lg transition-colors ${view === Views.MONTH ? 'text-primary' : 'text-txt-muted hover:text-txt'
+              }`}
           >
             <LayoutGrid className="w-4 h-4" /> <span className="hidden sm:inline">Mes</span>
           </button>
           <button
             onClick={() => onView(Views.DAY)}
-            className={`flex items-center gap-2 px-4 py-1.5 text-sm font-bold rounded-lg transition-all ${view === Views.DAY ? 'bg-white text-primary shadow-sm' : 'text-txt-muted hover:text-txt'}`}
+            className={`relative z-10 flex items-center gap-2 px-4 py-1.5 text-sm font-bold rounded-lg transition-colors ${view === Views.DAY ? 'text-primary' : 'text-txt-muted hover:text-txt'
+              }`}
           >
             <Clock className="w-4 h-4" /> <span className="hidden sm:inline">Día</span>
           </button>

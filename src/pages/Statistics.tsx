@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { TrendingUp, Users, Clock, DollarSign } from 'lucide-react';
+import { TrendingUp, Users, Clock, DollarSign, Star, MessageSquare } from 'lucide-react';
 
 interface OverviewData {
     citasMes: number;
     ingresosMes: number;
     topClientes: Array<{ nombre: string; telefono: string; totalCitas: number }>;
     horariosPopulares: Array<{ horario: string; totalReservas: number }>;
+    ratingPromedio?: number;
+    ultimosComentarios?: Array<{ clienteNombre: string; rating: number; comentario: string; fecha: string }>;
 }
 
 interface RevenueData {
@@ -61,6 +63,7 @@ const Statistics = () => {
         { label: 'Ingresos del Mes', value: `Bs. ${overview?.ingresosMes || 0}`, icon: DollarSign, gradient: 'from-emerald-500 to-teal-500' },
         { label: 'Clientes Frecuentes', value: overview?.topClientes.length || 0, icon: Users, gradient: 'from-violet-500 to-purple-500' },
         { label: 'Horarios Activos', value: overview?.horariosPopulares.length || 0, icon: Clock, gradient: 'from-amber-500 to-orange-500' },
+        { label: 'Satisfacción', value: (overview?.ratingPromedio || 0).toFixed(1), icon: Star, gradient: 'from-yellow-400 to-orange-400' },
     ];
 
     // Read CSS vars for chart colors
@@ -85,6 +88,7 @@ const Statistics = () => {
                             </div>
                         </div>
                     </div>
+
                 ))}
             </div>
 
@@ -160,6 +164,35 @@ const Statistics = () => {
                             ))}
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            {/* Últimos Comentarios */}
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                <h2 className="text-xl font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                    <MessageSquare className="w-5 h-5" /> Comentarios Recientes
+                </h2>
+                <div className="space-y-4">
+                    {overview?.ultimosComentarios?.length === 0 ? (
+                        <p className="text-slate-500 italic">No hay comentarios aún.</p>
+                    ) : (
+                        overview?.ultimosComentarios?.map((com, idx) => (
+                            <div key={idx} className="p-4 bg-slate-50 rounded-lg border border-slate-100">
+                                <div className="flex justify-between items-start mb-2">
+                                    <div>
+                                        <p className="font-semibold text-slate-800 capitalize">{com.clienteNombre || 'Anónimo'}</p>
+                                        <p className="text-xs text-slate-500">{new Date(com.fecha).toLocaleDateString()}</p>
+                                    </div>
+                                    <div className="flex">
+                                        {Array.from({ length: 5 }).map((_, i) => (
+                                            <Star key={i} className={`w-3 h-3 ${i < com.rating ? 'fill-yellow-400 text-yellow-400' : 'text-slate-300'}`} />
+                                        ))}
+                                    </div>
+                                </div>
+                                <p className="text-slate-600 text-sm italic">"{com.comentario}"</p>
+                            </div>
+                        ))
+                    )}
                 </div>
             </div>
         </div>
