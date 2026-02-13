@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import { api } from '../services/api';
+import { Calendar, Clock, CheckCircle2, TrendingUp, ArrowRight, Sparkles } from 'lucide-react';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { Link } from 'react-router-dom';
 
-// Definimos la interfaz exacta que viene de tu backend
 interface CitaResumen {
   id: number;
   clienteNombre: string | null;
   clienteTelefono: string;
-  horario: string; // OJO: Debe llamarse 'horario', no 'hora'
+  horario: string;
   estado: string;
 }
 
@@ -28,101 +31,140 @@ const Dashboard = () => {
       .catch(console.error);
   }, []);
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Buenos días';
+    if (hour < 18) return 'Buenas tardes';
+    return 'Buenas noches';
+  };
+
+  // Skeleton loading state
   if (!data) return (
-    <div className="flex items-center justify-center h-64">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-kenyan-copper-500 mx-auto"></div>
-        <p className="mt-4 text-gray-600">Cargando tablero...</p>
+    <div className="space-y-6">
+      <div className="skeleton h-24 w-full rounded-theme-lg" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="skeleton h-32 rounded-theme-lg" />
+        <div className="skeleton h-32 rounded-theme-lg" />
+        <div className="skeleton h-32 rounded-theme-lg" />
       </div>
+      <div className="skeleton h-64 rounded-theme-lg" />
     </div>
   );
 
+  const statCards = [
+    {
+      label: 'Citas para Hoy',
+      value: data.citasHoy,
+      icon: Calendar,
+      color: 'primary',
+      gradient: 'from-primary to-secondary',
+    },
+    {
+      label: 'Pagos por Validar',
+      value: data.pendientes,
+      icon: Clock,
+      color: 'warning',
+      gradient: 'from-amber-500 to-orange-500',
+    },
+    {
+      label: 'Total Citas Futuras',
+      value: data.totalFuturas,
+      icon: TrendingUp,
+      color: 'success',
+      gradient: 'from-emerald-500 to-teal-500',
+    },
+  ];
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 border border-gray-100">
-        <h1 className="text-xl md:text-2xl font-bold text-gray-800">Panel de Control</h1>
-        <p className="text-sm text-gray-600 mt-1">Resumen de tu spa y citas</p>
+      {/* Greeting Header */}
+      <div className="card-modern p-5 md:p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold text-txt flex items-center gap-2">
+              {getGreeting()} <span className="text-2xl">👋</span>
+            </h1>
+            <p className="text-sm text-txt-muted mt-1">
+              {format(new Date(), "EEEE d 'de' MMMM, yyyy", { locale: es })}
+            </p>
+          </div>
+          <div className="hidden sm:flex items-center gap-2 text-xs font-medium text-txt-muted bg-surface-elevated px-3 py-1.5 rounded-full">
+            <Sparkles className="w-3.5 h-3.5 text-primary" />
+            Panel Activo
+          </div>
+        </div>
       </div>
 
-      {/* Tarjetas de Resumen */}
+      {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div className="bg-white p-4 md:p-6 rounded-lg shadow border-l-4 border-kenyan-copper-500 hover:shadow-lg transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 font-medium">Citas para Hoy</p>
-              <p className="text-2xl md:text-3xl font-bold text-gray-800 mt-1">{data.citasHoy}</p>
+        {statCards.map((stat, i) => (
+          <div key={i} className="stat-card group">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-txt-secondary">{stat.label}</p>
+                <p className="text-3xl font-bold text-txt mt-2 animate-count-up">{stat.value}</p>
+              </div>
+              <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-lg`}
+                style={{ boxShadow: `0 4px 14px -3px ${stat.color === 'primary' ? 'var(--color-primary-glow)' : stat.color === 'warning' ? 'rgba(245,158,11,0.3)' : 'rgba(16,185,129,0.3)'}` }}
+              >
+                <stat.icon className="w-5 h-5 text-white" />
+              </div>
             </div>
           </div>
-        </div>
-
-        <div className="bg-white p-4 md:p-6 rounded-lg shadow border-l-4 border-orange-500 hover:shadow-lg transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 font-medium">Pagos por Validar</p>
-              <p className="text-2xl md:text-3xl font-bold text-orange-600 mt-1">{data.pendientes}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-4 md:p-6 rounded-lg shadow border-l-4 border-green-500 hover:shadow-lg transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 font-medium">Total Citas</p>
-              <p className="text-2xl md:text-3xl font-bold text-green-600 mt-1">{data.totalFuturas}</p>
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* Tabla Agenda de Hoy */}
-      <div className="bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden">
-        <div className="px-4 md:px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg md:text-xl font-bold text-gray-800">Agenda de Hoy</h2>
-          <p className="text-sm text-gray-600 mt-1">Todas las citas programadas para hoy</p>
+      {/* Today's Agenda */}
+      <div className="card-modern overflow-hidden">
+        <div className="px-5 md:px-6 py-4 border-b border-border flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-txt">Agenda de Hoy</h2>
+            <p className="text-xs text-txt-muted mt-0.5">Citas programadas para hoy</p>
+          </div>
+          <Link to="/dashboard/calendario" className="text-xs font-semibold text-primary hover:text-primary-dark transition-colors flex items-center gap-1">
+            Ver calendario <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
         </div>
 
         {/* Desktop Table */}
-        <div className="hidden md:block overflow-x-auto">
+        <div className="hidden md:block">
           <table className="w-full text-left">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Hora</th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+            <thead>
+              <tr className="bg-surface-elevated/50">
+                <th className="px-6 py-3 text-[11px] font-semibold text-txt-muted uppercase tracking-wider">Hora</th>
+                <th className="px-6 py-3 text-[11px] font-semibold text-txt-muted uppercase tracking-wider">Cliente</th>
+                <th className="px-6 py-3 text-[11px] font-semibold text-txt-muted uppercase tracking-wider">Estado</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-border-light">
               {data.proximasCitas.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="px-6 py-8 text-center text-gray-400">
-                    <div className="text-4xl mb-2">✓</div>
-                    <p>No hay más citas programadas para hoy.</p>
+                  <td colSpan={3} className="px-6 py-10 text-center text-txt-muted">
+                    <CheckCircle2 className="w-10 h-10 mx-auto text-success/40 mb-2" />
+                    <p className="font-medium">No hay citas programadas para hoy</p>
                   </td>
                 </tr>
               ) : (
                 data.proximasCitas.map((cita) => (
-                  <tr key={cita.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 font-semibold text-gray-800">
-                      {cita.horario}
+                  <tr key={cita.id} className="hover:bg-surface-alt/50 transition-colors">
+                    <td className="px-6 py-3.5">
+                      <span className="font-mono font-semibold text-txt text-sm">{cita.horario}</span>
                     </td>
-
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-3.5">
                       {cita.clienteNombre ? (
-                        <span className="capitalize font-medium">{cita.clienteNombre}</span>
+                        <span className="capitalize font-medium text-sm text-txt">{cita.clienteNombre}</span>
                       ) : (
-                        <span className="text-gray-500 text-sm flex items-center gap-1">
-                          Tel: {cita.clienteTelefono.length > 15
+                        <span className="text-txt-muted text-sm font-mono">
+                          {cita.clienteTelefono.length > 15
                             ? cita.clienteTelefono.substring(0, 8) + '...'
                             : cita.clienteTelefono}
                         </span>
                       )}
                     </td>
-
-                    <td className="px-6 py-4">
-                      <span className={`px-3 py-1 text-xs rounded-full font-semibold ${cita.estado === 'CONFIRMADA' ? 'bg-green-100 text-green-800' :
-                        cita.estado === 'VALIDACION_PENDIENTE' ? 'bg-orange-100 text-orange-800' :
-                          'bg-gray-100 text-gray-800'
+                    <td className="px-6 py-3.5">
+                      <span className={`badge ${cita.estado === 'CONFIRMADA' ? 'badge-success' :
+                          cita.estado === 'VALIDACION_PENDIENTE' ? 'badge-warning' :
+                            'badge-info'
                         }`}>
                         {cita.estado}
                       </span>
@@ -135,31 +177,31 @@ const Dashboard = () => {
         </div>
 
         {/* Mobile Cards */}
-        <div className="md:hidden divide-y divide-gray-200">
+        <div className="md:hidden divide-y divide-border-light">
           {data.proximasCitas.length === 0 ? (
-            <div className="px-4 py-8 text-center text-gray-400">
-              <div className="text-4xl mb-2">✓</div>
-              <p>No hay más citas programadas para hoy.</p>
+            <div className="px-4 py-10 text-center text-txt-muted">
+              <CheckCircle2 className="w-10 h-10 mx-auto text-success/40 mb-2" />
+              <p className="font-medium">No hay citas programadas para hoy</p>
             </div>
           ) : (
             data.proximasCitas.map((cita) => (
-              <div key={cita.id} className="p-4 hover:bg-gray-50 transition-colors">
-                <div className="flex justify-between items-start mb-2">
+              <div key={cita.id} className="p-4 hover:bg-surface-alt/50 transition-colors">
+                <div className="flex justify-between items-start">
                   <div>
-                    <p className="font-semibold text-gray-800">{cita.horario}</p>
+                    <p className="font-mono font-semibold text-txt text-sm">{cita.horario}</p>
                     {cita.clienteNombre ? (
-                      <p className="text-sm text-gray-600 capitalize">{cita.clienteNombre}</p>
+                      <p className="text-sm text-txt-secondary capitalize mt-0.5">{cita.clienteNombre}</p>
                     ) : (
-                      <p className="text-sm text-gray-500 flex items-center gap-1">
-                        Tel: {cita.clienteTelefono.length > 15
+                      <p className="text-sm text-txt-muted font-mono mt-0.5">
+                        {cita.clienteTelefono.length > 15
                           ? cita.clienteTelefono.substring(0, 8) + '...'
                           : cita.clienteTelefono}
                       </p>
                     )}
                   </div>
-                  <span className={`px-2 py-1 text-xs rounded-full font-semibold ${cita.estado === 'CONFIRMADA' ? 'bg-green-100 text-green-800' :
-                    cita.estado === 'VALIDACION_PENDIENTE' ? 'bg-orange-100 text-orange-800' :
-                      'bg-gray-100 text-gray-800'
+                  <span className={`badge ${cita.estado === 'CONFIRMADA' ? 'badge-success' :
+                      cita.estado === 'VALIDACION_PENDIENTE' ? 'badge-warning' :
+                        'badge-info'
                     }`}>
                     {cita.estado}
                   </span>
