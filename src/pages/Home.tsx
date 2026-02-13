@@ -82,7 +82,7 @@ const Dashboard = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl md:text-2xl font-bold text-txt flex items-center gap-2">
-              {getGreeting()} <span className="text-2xl">👋</span>
+              {getGreeting()} <span className="text-2xl"></span>
             </h1>
             <p className="text-sm text-txt-muted mt-1">
               {format(new Date(), "EEEE d 'de' MMMM, yyyy", { locale: es })}
