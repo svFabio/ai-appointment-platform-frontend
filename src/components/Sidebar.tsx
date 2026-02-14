@@ -1,108 +1,117 @@
 import { Link, useLocation } from 'react-router-dom';
-import { X, LayoutDashboard, Calendar, CheckSquare, Smartphone, BarChart3, Users, LogOut } from 'lucide-react';
+import { X, LayoutDashboard, Calendar, CheckSquare, Smartphone, BarChart3, Users, LogOut, MessageCircle, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-// Definimos qué propiedades recibe este componente
 interface SidebarProps {
-  isOpen: boolean;      // ¿Está abierto en móvil?
-  onClose: () => void;  // Función para cerrarlo
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
-  const location = useLocation(); // Hook para saber en qué URL estamos
-  const { isAdmin, logout } = useAuth(); // Hook para saber si es admin y cerrar sesión
+  const location = useLocation();
+  const { isAdmin, logout } = useAuth();
 
-  // Función auxiliar para saber si un link está activo
   const isActive = (path: string) => location.pathname === path;
 
-  // Clases base para los links
   const linkClass = (path: string) => `
-    flex items-center gap-3 px-4 py-3 rounded transition-all duration-200
+    flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 group relative
     ${isActive(path)
-      ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50' // Estilo Activo
-      : 'text-gray-400 hover:bg-slate-800 hover:text-white'   // Estilo Inactivo
+      ? 'bg-primary text-white shadow-lg shadow-primary/20 font-semibold'
+      : 'text-sidebar-text hover:bg-sidebar-hover hover:text-white'
     }
   `;
 
   return (
     <aside className={`
-      fixed top-0 h-[100dvh] left-0 z-50 w-64 bg-slate-900 text-white flex flex-col shadow-xl 
+      fixed top-0 h-[100dvh] left-0 z-50 w-64 bg-sidebar text-white flex flex-col shadow-xl 
       transition-transform duration-300 ease-in-out
       md:static md:translate-x-0 
       ${isOpen ? 'translate-x-0' : '-translate-x-full'}
     `}>
-      {/* Botón X para cerrar (Solo visible en celular) */}
+      {/* Close button mobile */}
       <div className="md:hidden absolute top-4 right-4">
-        <button onClick={onClose} className="p-1 hover:bg-slate-800 rounded-full transition-colors">
-          <X className="w-6 h-6 text-gray-400 hover:text-white" />
+        <button onClick={onClose} className="p-1.5 hover:bg-sidebar-hover rounded-full transition-colors">
+          <X className="w-5 h-5 text-sidebar-text hover:text-white" />
         </button>
       </div>
 
-      {/* Header del Sidebar */}
-      <div className="p-6 text-center border-b border-slate-800 mt-8 md:mt-0">
-        <h2 className="text-2xl font-bold text-blue-400 tracking-tight">Citas WA</h2>
-        <p className="text-xs text-gray-500 mt-1 uppercase tracking-wider">Panel de Control</p>
+      {/* Logo Area */}
+      <div className="p-6 mt-8 md:mt-0">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
+            <Sparkles className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-white tracking-tight">Citas WA</h2>
+            <p className="text-[10px] text-sidebar-text uppercase tracking-widest font-medium">Panel de Control</p>
+          </div>
+        </div>
       </div>
 
-      {/* Navegación */}
-      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+      {/* Divider */}
+      <div className="mx-4 h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent" />
+
+      {/* Navigation */}
+      <nav className="flex-1 p-3 space-y-1 overflow-y-auto mt-2">
+        <p className="px-4 py-2 text-[10px] text-sidebar-text uppercase tracking-widest font-semibold">General</p>
 
         <Link to="/dashboard" onClick={onClose} className={linkClass('/dashboard')}>
-          <LayoutDashboard size={20} />
-          <span className="font-medium">Inicio</span>
+          <LayoutDashboard size={18} />
+          <span className="text-sm font-medium">Inicio</span>
         </Link>
 
         <Link to="/dashboard/calendario" onClick={onClose} className={linkClass('/dashboard/calendario')}>
-          <Calendar size={20} />
-          <span className="font-medium">Calendario</span>
+          <Calendar size={18} />
+          <span className="text-sm font-medium">Calendario</span>
         </Link>
 
         <Link to="/dashboard/pagos" onClick={onClose} className={linkClass('/dashboard/pagos')}>
-          <CheckSquare size={20} />
-          <span className="font-medium">Validar Pagos</span>
+          <CheckSquare size={18} />
+          <span className="text-sm font-medium">Validar Pagos</span>
+        </Link>
+
+        <Link to="/dashboard/chat" onClick={onClose} className={linkClass('/dashboard/chat')}>
+          <MessageCircle size={18} />
+          <span className="text-sm font-medium">Chat WhatsApp</span>
         </Link>
 
         <Link to="/dashboard/vincular" onClick={onClose} className={linkClass('/dashboard/vincular')}>
-          <Smartphone size={20} />
-          <span className="font-medium">Vincular WhatsApp</span>
+          <Smartphone size={18} />
+          <span className="text-sm font-medium">Vincular WhatsApp</span>
         </Link>
 
-        {/* Menús solo para ADMIN */}
+        {/* Admin section */}
         {isAdmin() && (
           <>
-            <div className="pt-4 pb-2 px-4">
-              <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Administración</p>
-            </div>
+            <div className="mx-4 my-3 h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent" />
+            <p className="px-4 py-2 text-[10px] text-sidebar-text uppercase tracking-widest font-semibold">Administración</p>
 
             <Link to="/dashboard/statistics" onClick={onClose} className={linkClass('/dashboard/statistics')}>
-              <BarChart3 size={20} />
-              <span className="font-medium">Estadísticas</span>
+              <BarChart3 size={18} />
+              <span className="text-sm font-medium">Estadísticas</span>
             </Link>
 
             <Link to="/dashboard/users" onClick={onClose} className={linkClass('/dashboard/users')}>
-              <Users size={20} />
-              <span className="font-medium">Usuarios</span>
+              <Users size={18} />
+              <span className="text-sm font-medium">Usuarios</span>
             </Link>
           </>
         )}
-
       </nav>
 
-      {/* Footer con Botón de Cerrar Sesión */}
-      <div className="p-4 border-t border-slate-800">
+      {/* Footer */}
+      <div className="p-3 border-t border-slate-800/50">
         <button
           onClick={() => {
             logout();
             onClose();
           }}
-          className="flex items-center gap-3 px-4 py-3 w-full text-left rounded text-red-400 hover:bg-slate-800 hover:text-red-300 transition-all duration-200"
+          className="flex items-center gap-3 px-4 py-2.5 w-full text-left rounded-xl text-danger/80 hover:bg-danger/10 hover:text-danger transition-all duration-200"
         >
-          <LogOut size={20} />
-          <span className="font-medium">Cerrar Sesión</span>
+          <LogOut size={18} />
+          <span className="text-sm font-medium">Cerrar Sesión</span>
         </button>
-        <div className="text-center text-xs text-gray-600 font-mono mt-4">
-          v1.0.0 PRO
-        </div>
+        <p className="text-center text-[10px] text-sidebar-text/50 font-mono mt-3 tracking-wider">v1.0.0 PRO</p>
       </div>
     </aside>
   );
