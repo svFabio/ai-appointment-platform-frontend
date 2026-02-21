@@ -256,5 +256,17 @@ export const api = {
       console.error(error);
       return { success: false, error: 'Error de conexión' };
     }
+  },
+
+  eliminarConversacion: async (jid: string): Promise<{ success: boolean }> => {
+    try {
+      const response = await fetch(`${API_URL}/chat/conversacion/${encodeURIComponent(jid)}`, {
+        method: 'DELETE',
+        headers: getHeaders()
+      });
+      return response.ok ? { success: true } : { success: false };
+    } catch {
+      return { success: false };
+    }
   }
 };

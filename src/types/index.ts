@@ -38,4 +38,6 @@ export interface Conversacion {
   totalMensajes: number;
   ultimoContenido: string;
   ultimaDireccion: string;
+  clienteNombre?: string | null;
+  telefonoReal?: string;
 }
