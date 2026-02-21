@@ -7,10 +7,10 @@ import {
     MessageCircle,
     ArrowLeft,
     Phone,
-    Clock,
     Search,
     Loader2,
-    WifiOff
+    WifiOff,
+    Trash2
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -68,6 +68,12 @@ const Chat = () => {
             });
         });
 
+        // Eliminar conversación en tiempo real cuando otro cliente la borra
+        socket.on('conversacion-eliminada', ({ remoteJid }: { remoteJid: string }) => {
+            setConversaciones(prev => prev.filter(c => c.remoteJid !== remoteJid));
+            setSelectedJid(prev => prev === remoteJid ? null : prev);
+        });
+
         return () => { socket.disconnect(); };
     }, []);
 
@@ -93,6 +99,16 @@ const Chat = () => {
         }
     };
 
+    const handleDeleteConversacion = async (e: React.MouseEvent, jid: string) => {
+        e.stopPropagation(); // no abrir el chat
+        if (!confirm('¿Eliminar esta conversación y todos sus mensajes de la base de datos?')) return;
+        const result = await api.eliminarConversacion(jid);
+        if (result.success) {
+            setConversaciones(prev => prev.filter(c => c.remoteJid !== jid));
+            if (selectedJid === jid) setSelectedJid(null);
+        }
+    };
+
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -100,11 +116,14 @@ const Chat = () => {
         }
     };
 
-    const formatJid = (jid: string) => jid.replace('@s.whatsapp.net', '');
+    const formatJid = (jid: string) => jid.split('@')[0];
     const formatTimestamp = (ts: string) => { try { return format(new Date(ts), 'HH:mm', { locale: es }); } catch { return ''; } };
     const formatDate = (ts: string) => { try { return format(new Date(ts), 'dd MMM, HH:mm', { locale: es }); } catch { return ''; } };
 
-    const conversacionesFiltradas = conversaciones.filter(c => formatJid(c.remoteJid).includes(busqueda));
+    const conversacionesFiltradas = conversaciones.filter(c =>
+        formatJid(c.remoteJid).includes(busqueda) ||
+        (c.clienteNombre ?? '').toLowerCase().includes(busqueda.toLowerCase())
+    );
 
     return (
         <div className="h-[calc(100dvh-80px)] flex bg-surface rounded-2xl shadow-xl border border-border overflow-hidden">
@@ -120,7 +139,7 @@ const Chat = () => {
                             value={busqueda}
                             onChange={(e) => setBusqueda(e.target.value)}
                             className="w-full pl-9 pr-3 py-2 bg-white/20 border border-white/20 rounded-lg text-white placeholder-white/60 text-sm focus:outline-none focus:ring-2 focus:ring-white/30 transition-all"
-                            placeholder="Buscar por número..."
+                            placeholder="Buscar por nombre o número..."
                         />
                     </div>
                 </div>
@@ -143,15 +162,15 @@ const Chat = () => {
                                 className={`w-full p-4 flex items-start gap-3 hover:bg-surface-elevated transition-colors border-b border-border-light text-left group ${selectedJid === conv.remoteJid ? 'bg-primary-light/10 border-l-4 border-l-primary' : 'border-l-4 border-l-transparent'}`}
                             >
                                 <div className="w-12 h-12 rounded-full gradient-primary-subtle flex items-center justify-center text-primary font-bold shrink-0 shadow-sm group-hover:scale-105 transition-transform">
-                                    {formatJid(conv.remoteJid).slice(-2)}
+                                    {(conv.clienteNombre ?? formatJid(conv.remoteJid)).slice(0, 2).toUpperCase()}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-1.5">
-                                            <Phone className="w-3 h-3 text-txt-muted" />
-                                            <span className="font-semibold text-txt text-sm">{formatJid(conv.remoteJid)}</span>
-                                        </div>
-                                        <span className="text-[10px] text-txt-muted shrink-0">{formatDate(conv.ultimoMensaje)}</span>
+                                    <span className="font-semibold text-txt text-sm truncate block">
+                                        {conv.clienteNombre ?? formatJid(conv.remoteJid)}
+                                    </span>
+                                    <div className="flex items-center gap-1 mt-0.5">
+                                        <Phone className="w-2.5 h-2.5 text-txt-muted shrink-0" />
+                                        <span className="text-[10px] text-txt-muted font-mono truncate">{conv.telefonoReal || formatJid(conv.remoteJid)}</span>
                                     </div>
                                     <p className="text-xs text-txt-secondary mt-1 truncate">
                                         {conv.ultimaDireccion === 'SALIENTE' && <span className="text-primary font-bold">✓✓ </span>}
@@ -160,6 +179,17 @@ const Chat = () => {
                                     <span className="inline-block mt-1 text-[10px] px-1.5 py-0.5 bg-surface-elevated text-txt-muted rounded-full">
                                         {conv.totalMensajes} msgs
                                     </span>
+                                </div>
+                                {/* Columna derecha: fecha arriba, trash abajo */}
+                                <div className="flex flex-col items-end gap-2 shrink-0">
+                                    <span className="text-[10px] text-txt-muted">{formatDate(conv.ultimoMensaje)}</span>
+                                    <button
+                                        onClick={(e) => handleDeleteConversacion(e, conv.remoteJid)}
+                                        title="Eliminar conversación"
+                                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50"
+                                    >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
                                 </div>
                             </button>
                         ))
@@ -176,12 +206,15 @@ const Chat = () => {
                                 <ArrowLeft className="w-5 h-5" />
                             </button>
                             <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center text-white font-bold shadow-md">
-                                {formatJid(selectedJid).slice(-2)}
+                                {conversaciones.find(c => c.remoteJid === selectedJid)?.clienteNombre?.slice(0, 2).toUpperCase() ?? formatJid(selectedJid).slice(-2)}
                             </div>
                             <div className="flex-1">
-                                <p className="text-txt font-bold text-sm">{formatJid(selectedJid)}</p>
+                                <p className="text-txt font-bold text-sm">
+                                    {conversaciones.find(c => c.remoteJid === selectedJid)?.clienteNombre ?? formatJid(selectedJid)}
+                                </p>
                                 <p className="text-txt-muted text-xs flex items-center gap-1">
-                                    <Clock className="w-3 h-3" /> {mensajes.length} mensajes actualizados
+                                    <Phone className="w-3 h-3" />
+                                    {conversaciones.find(c => c.remoteJid === selectedJid)?.telefonoReal || formatJid(selectedJid)}
                                 </p>
                             </div>
                         </div>
@@ -196,8 +229,8 @@ const Chat = () => {
                                 mensajes.map(msg => (
                                     <div key={msg.id} className={`flex ${msg.direccion === 'SALIENTE' ? 'justify-end' : 'justify-start'}`}>
                                         <div className={`max-w-[75%] px-4 py-3 rounded-2xl shadow-sm text-sm ${msg.direccion === 'SALIENTE'
-                                                ? 'bg-primary text-white rounded-tr-sm'
-                                                : 'bg-white text-txt rounded-tl-sm border border-border'
+                                            ? 'bg-primary text-white rounded-tr-sm'
+                                            : 'bg-white text-txt rounded-tl-sm border border-border'
                                             }`}>
                                             <p className="whitespace-pre-wrap break-words leading-relaxed">{msg.contenido}</p>
                                             <div className={`flex items-center gap-1 mt-1 ${msg.direccion === 'SALIENTE' ? 'justify-end text-white/80' : 'text-txt-muted'}`}>

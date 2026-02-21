@@ -621,34 +621,26 @@ const ModalReprogramar = ({
 // --- 4. Componentes Visuales del Calendario ---
 const CustomEventDay = ({ event }: { event: EventoCalendario }) => {
   const { title, resource } = event;
-  const getIcon = () => {
-    switch (resource?.estado) {
-      case 'CONFIRMADA': return <CheckCircle2 className="w-3 h-3 text-success" />;
-      case 'VALIDAR': return <AlertCircle className="w-3 h-3 text-warning" />;
-      case 'PENDIENTE_PAGO': return <Banknote className="w-3 h-3 text-info" />;
-      default: return <CalendarIcon className="w-3 h-3 text-primary" />;
-    }
-  };
 
-  const getBorderColor = () => {
+  const getDotColor = () => {
     switch (resource?.estado) {
-      case 'CONFIRMADA': return 'bg-success/10 border-success';
-      case 'VALIDAR': return 'bg-warning/10 border-warning';
-      case 'PENDIENTE_PAGO': return 'bg-info/10 border-info';
-      default: return 'bg-surface-elevated border-primary';
+      case 'CONFIRMADA': return 'bg-success';
+      case 'VALIDAR': return 'bg-warning';
+      case 'PENDIENTE_PAGO': return 'bg-info';
+      default: return 'bg-primary';
     }
   };
 
   return (
-    <div className={`flex flex-col h-full justify-center px-2 transition-all rounded-md border-l-[3px] ${getBorderColor()} hover:brightness-95`}>
+    <div className="flex flex-col justify-center h-full px-2 py-1 gap-0.5">
       <div className="flex items-center gap-1.5">
-        {getIcon()}
-        <span className="text-xs font-bold truncate leading-tight text-txt">
+        <span className={`w-2 h-2 rounded-full shrink-0 ${getDotColor()}`} />
+        <span className="text-xs font-bold text-txt leading-tight truncate">
           {title}
         </span>
       </div>
       {resource?.servicio && (
-        <span className="text-[10px] text-txt-secondary truncate ml-4.5 opacity-80">
+        <span className="text-[11px] text-txt-secondary leading-tight pl-3.5 truncate">
           {resource.servicio}
         </span>
       )}
@@ -657,16 +649,22 @@ const CustomEventDay = ({ event }: { event: EventoCalendario }) => {
 };
 
 const CustomEventMonth = ({ event }: { event: EventoCalendario }) => {
+  const count = event.resource?.count || 1;
   return (
-    <div className="flex items-center justify-center h-full w-full">
-      <span className="hidden md:flex items-center w-full px-1.5 py-0.5 rounded-md bg-surface-elevated/50 border border-border/50 text-[10px] font-semibold text-txt-secondary hover:bg-surface-elevated transition-colors truncate gap-1">
-        <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-        <span className="truncate">{event.title}</span>
+    <>
+      {/* Desktop: text label — centered in cell */}
+      <span className="hidden md:inline-flex items-center justify-center gap-1 text-[11px] font-semibold text-txt-secondary w-full">
+        <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0 inline-block" />
+        <span>{event.title}</span>
       </span>
-      <div className="md:hidden flex items-center justify-center w-full h-full">
-        <span className="w-2 h-2 rounded-full bg-primary/80" />
-      </div>
-    </div>
+      {/* Mobile: colored dots representing count */}
+      <span className="md:hidden inline-flex items-center justify-center gap-0.5 w-full">
+        {Array.from({ length: Math.min(count, 4) }).map((_, i) => (
+          <span key={i} className="w-[6px] h-[6px] rounded-full bg-primary inline-block" />
+        ))}
+        {count > 4 && <span className="text-[9px] text-primary font-bold leading-none">+</span>}
+      </span>
+    </>
   );
 };
 
@@ -789,8 +787,8 @@ const Calendario = () => {
   const eventStyleGetter = (event: EventoCalendario) => {
     if (event.resource?.tipo === 'resumen') {
       return {
-        className: '',
-        style: { backgroundColor: 'transparent', color: 'black', border: 'none', padding: 0 }
+        className: 'rbc-event-clean',
+        style: { backgroundColor: 'transparent', color: 'inherit', border: 'none', boxShadow: 'none', padding: 0, outline: 'none' }
       };
     }
     let bg = 'var(--color-surface)';
@@ -803,7 +801,7 @@ const Calendario = () => {
     }
 
     return {
-      className: 'shadow-sm rounded-md border-l-4 overflow-hidden',
+      className: 'shadow-sm rounded-md border-l-4',
       style: { backgroundColor: bg, borderColor: border, color: 'var(--color-text)', fontSize: '0.8rem' }
     };
   };
@@ -835,11 +833,13 @@ const Calendario = () => {
           startAccessor="start"
           endAccessor="end"
           style={{ height: 'calc(100vh - 220px)' }}
-          view={vista} // Controlado
-          onView={setVista} // Controlado
-          date={fecha} // Controlado
-          onNavigate={setFecha} // Controlado
+          view={vista}
+          onView={setVista}
+          date={fecha}
+          onNavigate={setFecha}
           culture='es'
+          min={new Date(2026, 0, 1, 12, 0, 0)}
+          max={new Date(2026, 0, 1, 20, 0, 0)}
           components={{
             event: vista === Views.MONTH ? CustomEventMonth : CustomEventDay,
             toolbar: (props) => (
