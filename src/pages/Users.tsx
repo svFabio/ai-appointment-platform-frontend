@@ -128,7 +128,8 @@ const Users = () => {
                 </button>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+            {/* ── Desktop: tabla ── */}
+            <div className="hidden md:block bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
                 <table className="w-full">
                     <thead className="bg-slate-50">
                         <tr>
@@ -145,8 +146,7 @@ const Users = () => {
                                 <td className="py-3 px-4 text-sm text-slate-800">{user.nombre}</td>
                                 <td className="py-3 px-4 text-sm text-slate-600">{user.email}</td>
                                 <td className="py-3 px-4">
-                                    <span className={`inline-block px-2 py-1 text-xs font-semibold rounded ${user.rol === 'ADMIN' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
-                                        }`}>
+                                    <span className={`inline-block px-2 py-1 text-xs font-semibold rounded ${user.rol === 'ADMIN' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
                                         {user.rol}
                                     </span>
                                 </td>
@@ -154,16 +154,10 @@ const Users = () => {
                                     {new Date(user.creadoEn).toLocaleDateString()}
                                 </td>
                                 <td className="py-3 px-4 text-right">
-                                    <button
-                                        onClick={() => openModal(user)}
-                                        className="text-blue-600 hover:text-blue-800 mr-3"
-                                    >
+                                    <button onClick={() => openModal(user)} className="text-blue-600 hover:text-blue-800 mr-3">
                                         <Pencil className="w-4 h-4" />
                                     </button>
-                                    <button
-                                        onClick={() => handleDelete(user.id)}
-                                        className="text-red-600 hover:text-red-800"
-                                    >
+                                    <button onClick={() => handleDelete(user.id)} className="text-red-600 hover:text-red-800">
                                         <Trash2 className="w-4 h-4" />
                                     </button>
                                 </td>
@@ -171,6 +165,34 @@ const Users = () => {
                         ))}
                     </tbody>
                 </table>
+            </div>
+
+            {/* ── Mobile: cards ── */}
+            <div className="md:hidden space-y-3">
+                {users.map(user => (
+                    <div key={user.id} className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
+                        <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                                <p className="font-semibold text-slate-800 text-sm truncate">{user.nombre}</p>
+                                <p className="text-xs text-slate-500 truncate mt-0.5">{user.email}</p>
+                            </div>
+                            <span className={`shrink-0 inline-block px-2 py-1 text-xs font-semibold rounded ${user.rol === 'ADMIN' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
+                                {user.rol}
+                            </span>
+                        </div>
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
+                            <p className="text-xs text-slate-400">Creado: {new Date(user.creadoEn).toLocaleDateString()}</p>
+                            <div className="flex items-center gap-3">
+                                <button onClick={() => openModal(user)} className="text-blue-600 hover:text-blue-800">
+                                    <Pencil className="w-4 h-4" />
+                                </button>
+                                <button onClick={() => handleDelete(user.id)} className="text-red-600 hover:text-red-800">
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                ))}
             </div>
 
             {/* Modal */}

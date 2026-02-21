@@ -39,6 +39,19 @@ const AdminWhatsapp = () => {
     }
   };
 
+  // Reiniciar bot y forzar nuevo QR
+  const handleRestart = async () => {
+    try {
+      setLoading(true);
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+      await fetch(`${API_URL}/restart-whatsapp`, { method: 'POST' });
+      // El socket recibirá el nuevo QR automáticamente
+    } catch (error) {
+      alert("Error al reiniciar el bot");
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     // Initial fetch
     fetchStatus();
@@ -121,15 +134,21 @@ const AdminWhatsapp = () => {
                   </p>
                 </>
               ) : (
-                // --- CASO 3: ESPERANDO ---
+                // --- CASO 3: ESPERANDO / SIN QR ---
                 <div className="flex flex-col items-center py-8">
-                  <div className="text-4xl md:text-5xl mb-4 animate-bounce">⏳</div>
+                  <div className="text-4xl md:text-5xl mb-4 animate-spin inline-block">⟳</div>
                   <p className="font-medium text-gray-700 text-center mb-2">
-                    Generando código QR...
+                    {procesandoLogout ? "Reiniciando el sistema..." : "Generando código QR..."}
                   </p>
-                  <p className="text-xs md:text-sm text-gray-400 text-center max-w-sm">
-                    {procesandoLogout ? "Reiniciando el sistema..." : "Espere un momento..."}
+                  <p className="text-xs md:text-sm text-gray-400 text-center max-w-sm mb-6">
+                    Si tarda más de 10 segundos, haz clic en el botón de abajo.
                   </p>
+                  <button
+                    onClick={handleRestart}
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Forzar nuevo QR
+                  </button>
                 </div>
               )}
             </div>
