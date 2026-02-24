@@ -1,5 +1,6 @@
 # Frontend - Spa Appointment Admin Panel
-<img width="1772" height="785" alt="image" src="https://github.com/user-attachments/assets/9b00541e-abd2-4172-8b03-277488c89268" />
+<img width="1846" height="823" alt="image" src="https://github.com/user-attachments/assets/ae4048bd-7309-47ce-95c2-1fb74572ee06" />
+
 
 
 
