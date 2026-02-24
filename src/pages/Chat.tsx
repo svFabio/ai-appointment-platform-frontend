@@ -146,8 +146,17 @@ const Chat = () => {
 
                 <div className="flex-1 overflow-y-auto">
                     {loading ? (
-                        <div className="flex items-center justify-center h-40">
-                            <Loader2 className="w-6 h-6 animate-spin text-txt-muted" />
+                        <div className="space-y-1 p-2">
+                            {[...Array(6)].map((_, i) => (
+                                <div key={i} className="flex items-center gap-3 p-3 animate-pulse">
+                                    <div className="skeleton w-10 h-10 rounded-full shrink-0" />
+                                    <div className="flex-1 space-y-2">
+                                        <div className="skeleton h-3.5 w-3/5 rounded" />
+                                        <div className="skeleton h-2.5 w-4/5 rounded" />
+                                    </div>
+                                    <div className="skeleton h-2.5 w-10 rounded" />
+                                </div>
+                            ))}
                         </div>
                     ) : conversacionesFiltradas.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-40 text-txt-muted gap-2">
@@ -222,8 +231,12 @@ const Chat = () => {
                         <div className="flex-1 overflow-y-auto p-4 space-y-3"
                             style={{ backgroundImage: `radial-gradient(var(--color-border-light) 1px, transparent 1px)`, backgroundSize: '20px 20px' }}>
                             {loadingMensajes ? (
-                                <div className="flex items-center justify-center h-40">
-                                    <Loader2 className="w-6 h-6 animate-spin text-txt-muted" />
+                                <div className="space-y-4 p-2">
+                                    {[...Array(5)].map((_, i) => (
+                                        <div key={i} className={`flex ${i % 2 === 0 ? 'justify-start' : 'justify-end'}`}>
+                                            <div className={`skeleton rounded-2xl ${i % 2 === 0 ? 'w-3/5 h-10' : 'w-2/5 h-8'}`} />
+                                        </div>
+                                    ))}
                                 </div>
                             ) : (
                                 mensajes.map(msg => (
