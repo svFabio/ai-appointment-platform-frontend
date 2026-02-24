@@ -123,7 +123,7 @@ const ModalDetalle = ({
             </div>
             <div>
               <p className="text-[10px] text-txt-muted font-bold uppercase tracking-wider mb-0.5">Cliente</p>
-              <p className="font-bold text-txt text-lg leading-tight">{event.title}</p>
+              <p className="font-bold text-txt text-base leading-tight">{event.title}</p>
             </div>
           </div>
 
@@ -134,7 +134,7 @@ const ModalDetalle = ({
             </div>
             <div>
               <p className="text-[10px] text-txt-muted font-bold uppercase tracking-wider mb-0.5">Teléfono</p>
-              <p className="font-medium text-txt font-mono">{event.resource?.telefono || 'No registrado'}</p>
+              <p className="font-medium text-txt text-sm">{event.resource?.telefono || 'No registrado'}</p>
             </div>
           </div>
 
@@ -197,7 +197,7 @@ const ModalDetalle = ({
                 <textarea
                   value={descripcion}
                   onChange={(e) => { setDescripcion(e.target.value); setGuardado(false); }}
-                  className="input-modern text-sm resize-none min-h-[80px]"
+                  className="input-modern text-sm resize-none min-h-[48px]"
                   placeholder="Agregar notas privadas..."
                 />
                 <button
@@ -798,6 +798,7 @@ const Calendario = () => {
       case 'CONFIRMADA': border = 'var(--color-success)'; bg = 'var(--color-success-light)'; break;
       case 'VALIDAR': border = 'var(--color-warning)'; bg = 'var(--color-warning-light)'; break;
       case 'PENDIENTE_PAGO': border = 'var(--color-info)'; bg = 'var(--color-info-light)'; break;
+      case 'NO_ASISTIO': border = 'var(--color-danger)'; bg = 'var(--color-danger-light)'; break;
     }
 
     return {
@@ -887,7 +888,15 @@ const Calendario = () => {
             setCitaSeleccionada(null);
           }}
           onNoAsistio={async () => {
-            // Logic kept simple, would call API
+            const citaId = citaSeleccionada.resource?.citaId;
+            if (!citaId) return;
+            const esNoAsistio = citaSeleccionada.resource?.estado === 'NO_ASISTIO';
+            const result = esNoAsistio
+              ? await api.marcarAsistio(citaId)
+              : await api.marcarNoAsistio(citaId);
+            if (result.success) {
+              queryClient.invalidateQueries({ queryKey: ['citas'] });
+            }
             setCitaSeleccionada(null);
           }}
         />

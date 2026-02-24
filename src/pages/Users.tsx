@@ -112,7 +112,26 @@ const Users = () => {
     };
 
     if (loading) {
-        return <div className="p-6">Cargando usuarios...</div>;
+        return (
+            <div className="p-6 space-y-4">
+                <div className="flex justify-between items-center mb-6">
+                    <div className="skeleton h-8 w-48 rounded" />
+                    <div className="skeleton h-10 w-36 rounded-xl" />
+                </div>
+                <div className="card-modern overflow-hidden">
+                    {[...Array(5)].map((_, i) => (
+                        <div key={i} className="flex items-center gap-4 p-4 border-b border-border last:border-0">
+                            <div className="skeleton w-10 h-10 rounded-full shrink-0" />
+                            <div className="flex-1 space-y-2">
+                                <div className="skeleton h-3.5 w-2/5 rounded" />
+                                <div className="skeleton h-2.5 w-3/5 rounded" />
+                            </div>
+                            <div className="skeleton h-6 w-16 rounded-full" />
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
     }
 
     return (
