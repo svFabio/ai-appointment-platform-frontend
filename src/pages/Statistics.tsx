@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
     BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
-    XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+    XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 import { TrendingUp, Users, Clock, DollarSign, Globe, MapPin } from 'lucide-react';
 
@@ -151,7 +151,7 @@ const Statistics = () => {
                             <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                             <XAxis dataKey="mesLabel" stroke="var(--color-text-muted)" fontSize={12} />
                             <YAxis stroke="var(--color-text-muted)" fontSize={12} tickFormatter={(v) => `Bs.${v}`} />
-                            <Tooltip contentStyle={tooltipStyle} formatter={(value: number) => [`Bs. ${value}`, 'Ingresos']} />
+                            <Tooltip contentStyle={tooltipStyle} formatter={(value: number | undefined) => [`Bs. ${value ?? 0}`, 'Ingresos']} />
                             <Line
                                 type="monotone"
                                 dataKey="total"
