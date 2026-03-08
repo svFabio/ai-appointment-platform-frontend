@@ -33,7 +33,8 @@ function App() {
       reconnection: true
     });
 
-    socket.on('nueva-cita', (data: any) => {
+    interface NuevaCitaPayload { clienteNombre: string; clienteTelefono: string; fecha: string; horario: string; }
+    socket.on('nueva-cita', (data: NuevaCitaPayload) => {
       const fechaFormateada = format(new Date(data.fecha), 'dd MMM yyyy', { locale: es });
       addNotification({
         message: `Nueva cita de ${data.clienteNombre}`,

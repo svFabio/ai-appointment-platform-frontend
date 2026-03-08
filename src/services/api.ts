@@ -337,7 +337,7 @@ export const api = {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Error al solicitar el codigo');
       return data as { codigo: string };
-    } catch (e: any) { throw e; }
+    } catch (e: unknown) { throw e; }
   },
 
   // --- CONFIGURACION BOT ---

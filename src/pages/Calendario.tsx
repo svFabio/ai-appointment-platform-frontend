@@ -668,7 +668,8 @@ const CustomEventMonth = ({ event }: { event: EventoCalendario }) => {
   );
 };
 
-const CustomToolbar = ({ onNavigate, onView, view, label, onNuevaCita }: any) => {
+interface CustomToolbarProps { onNavigate: (action: 'PREV' | 'NEXT' | 'TODAY') => void; onView: (view: View) => void; view: View; label: string; onNuevaCita: () => void; }
+const CustomToolbar = ({ onNavigate, onView, view, label, onNuevaCita }: CustomToolbarProps) => {
   return (
     <div className="flex flex-col md:flex-row items-center justify-between mb-6 pb-4 border-b border-border gap-4">
       <div className="flex items-center gap-3">

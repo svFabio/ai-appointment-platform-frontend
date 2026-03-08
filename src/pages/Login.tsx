@@ -18,9 +18,10 @@ export default function Login() {
     const { login } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
-    const from = (location.state as any)?.from?.pathname || '/dashboard';
+    const from = (location.state as { from?: { pathname?: string } })?.from?.pathname || '/dashboard';
 
-    const handleSuccess = (data: any) => {
+    interface LoginResponse { token: string; usuario: Parameters<typeof login>[1]; negocio: Parameters<typeof login>[2]; esNuevo?: boolean; }
+    const handleSuccess = (data: LoginResponse) => {
         login(data.token, data.usuario, data.negocio);
         navigate(data.esNuevo ? '/onboarding' : from, { replace: true });
     };
@@ -34,8 +35,8 @@ export default function Login() {
                 ? await api.login(email, password)
                 : await api.register(email, password);
             handleSuccess(data);
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError((err as Error).message);
         } finally {
             setLoading(false);
         }
@@ -66,8 +67,8 @@ export default function Login() {
                 const data = await resp.json();
                 if (!resp.ok) throw new Error(data.error || 'Error al autenticar con Google');
                 handleSuccess(data);
-            } catch (err: any) {
-                setError(err.message || 'Error al iniciar sesión con Google');
+            } catch (err: unknown) {
+                setError((err as Error).message || 'Error al iniciar sesión con Google');
             } finally {
                 setLoading(false);
             }
@@ -105,8 +106,8 @@ export default function Login() {
                                 key={t}
                                 onClick={() => switchTab(t)}
                                 className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${tab === t
-                                        ? 'bg-white text-gray-900 shadow-sm'
-                                        : 'text-gray-400 hover:text-gray-600'
+                                    ? 'bg-white text-gray-900 shadow-sm'
+                                    : 'text-gray-400 hover:text-gray-600'
                                     }`}
                             >
                                 {t === 'login' ? 'Iniciar sesión' : 'Registrarse'}
