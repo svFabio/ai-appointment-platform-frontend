@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { X, LayoutDashboard, Calendar, CheckSquare, Smartphone, BarChart3, Users, LogOut, MessageCircle, Sparkles } from 'lucide-react';
+import { X, LayoutDashboard, Calendar, CheckSquare, Smartphone, BarChart3, Users, LogOut, MessageCircle, Sparkles, Settings } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface SidebarProps {
@@ -9,7 +9,7 @@ interface SidebarProps {
 
 export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const location = useLocation();
-  const { isAdmin, logout } = useAuth();
+  const { isAdmin, logout, negocio } = useAuth();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -42,7 +42,7 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             <Sparkles className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-white tracking-tight">Citas WA</h2>
+            <h2 className="text-lg font-bold text-white tracking-tight">{negocio?.nombre || 'CitasWA'}</h2>
             <p className="text-[10px] text-sidebar-text uppercase tracking-widest font-medium">Panel de Control</p>
           </div>
         </div>
@@ -94,6 +94,11 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             <Link to="/dashboard/users" onClick={onClose} className={linkClass('/dashboard/users')}>
               <Users size={18} />
               <span className="text-sm font-medium">Usuarios</span>
+            </Link>
+
+            <Link to="/dashboard/configuracion-bot" onClick={onClose} className={linkClass('/dashboard/configuracion-bot')}>
+              <Settings size={18} />
+              <span className="text-sm font-medium">Configuracion Bot</span>
             </Link>
           </>
         )}

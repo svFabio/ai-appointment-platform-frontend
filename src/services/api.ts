@@ -13,18 +13,36 @@ const getHeaders = () => {
 
 export const api = {
   // --- AUTENTICACIÓN ---
+  loginConGoogle: async (googleToken: string) => {
+    const response = await fetch(`${API_URL}/auth/google`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ googleToken })
+    });
+    if (!response.ok) throw new Error('Error al autenticar con Google');
+    return await response.json();
+  },
+
+  register: async (email: string, password: string) => {
+    const response = await fetch(`${API_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Error al registrarse');
+    return data;
+  },
+
   login: async (email: string, password: string) => {
-    try {
-      const response = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      if (!response.ok) throw new Error('Credenciales inválidas');
-      return await response.json();
-    } catch (error) {
-      throw error;
-    }
+    const response = await fetch(`${API_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Credenciales incorrectas');
+    return data;
   },
 
   me: async (token: string) => {
@@ -33,8 +51,8 @@ export const api = {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) return null;
-      return await response.json();
-    } catch (error) {
+      return await response.json(); // incluye { id, nombre, email, rol, negocio }
+    } catch {
       return null;
     }
   },
@@ -268,5 +286,90 @@ export const api = {
     } catch {
       return { success: false };
     }
-  }
+  },
+
+  // --- WHATSAPP (multi-tenant) ---
+  statusWhatsapp: async () => {
+    try {
+      const response = await fetch(`${API_URL.replace('/api', '')}/api/status-whatsapp`, { headers: getHeaders() });
+      if (!response.ok) return null;
+      return await response.json();
+    } catch { return null; }
+  },
+
+  iniciarBot: async () => {
+    try {
+      const response = await fetch(`${API_URL.replace('/api', '')}/api/start-whatsapp`, {
+        method: 'POST',
+        headers: getHeaders()
+      });
+      return await response.json();
+    } catch (e) { return { error: 'Error de conexión' }; }
+  },
+
+  logoutBot: async () => {
+    try {
+      const response = await fetch(`${API_URL.replace('/api', '')}/api/logout`, {
+        method: 'POST',
+        headers: getHeaders()
+      });
+      return await response.json();
+    } catch (e) { return { error: 'Error de conexión' }; }
+  },
+
+  reiniciarBot: async () => {
+    try {
+      const response = await fetch(`${API_URL.replace('/api', '')}/api/restart-whatsapp`, {
+        method: 'POST',
+        headers: getHeaders()
+      });
+      return await response.json();
+    } catch (e) { return { error: 'Error de conexion' }; }
+  },
+
+  solicitarCodigoPairing: async (telefono: string) => {
+    try {
+      const response = await fetch(`${API_URL.replace('/api', '')}/api/pairing-code`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ telefono })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Error al solicitar el codigo');
+      return data as { codigo: string };
+    } catch (e: any) { throw e; }
+  },
+
+  // --- CONFIGURACION BOT ---
+  getConfiguracion: async () => {
+    const res = await fetch(`${API_URL}/configuracion`, { headers: getHeaders() });
+    if (!res.ok) throw new Error('Error obteniendo configuracion');
+    return res.json() as Promise<{
+      id: number;
+      trigger: string;
+      mensajeBienvenida: string;
+      mensajeConfirmacion: string;
+      servicios: { nombre: string; precio: number }[];
+      horarios: Record<string, string[]>;
+    }>;
+  },
+
+  updateConfiguracion: async (data: {
+    trigger?: string;
+    mensajeBienvenida?: string;
+    mensajeConfirmacion?: string;
+    servicios?: { nombre: string; precio: number }[];
+    horarios?: Record<string, string[]>;
+  }) => {
+    const res = await fetch(`${API_URL}/configuracion`, {
+      method: 'PATCH',
+      headers: getHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Error guardando configuracion');
+    }
+    return res.json();
+  },
 };
