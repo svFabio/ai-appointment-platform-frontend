@@ -668,7 +668,8 @@ const CustomEventMonth = ({ event }: { event: EventoCalendario }) => {
   );
 };
 
-const CustomToolbar = ({ onNavigate, onView, view, label, onNuevaCita }: any) => {
+interface CustomToolbarProps { onNavigate: (action: 'PREV' | 'NEXT' | 'TODAY') => void; onView: (view: View) => void; view: View; label: string; onNuevaCita: () => void; }
+const CustomToolbar = ({ onNavigate, onView, view, label, onNuevaCita }: CustomToolbarProps) => {
   return (
     <div className="flex flex-col md:flex-row items-center justify-between mb-6 pb-4 border-b border-border gap-4">
       <div className="flex items-center gap-3">
@@ -729,6 +730,25 @@ const Calendario = () => {
   const [citaSeleccionada, setCitaSeleccionada] = useState<EventoCalendario | null>(null);
   const [modalNuevaCita, setModalNuevaCita] = useState<{ isOpen: boolean; fecha?: Date }>({ isOpen: false });
   const [modalReprogramar, setModalReprogramar] = useState<{ isOpen: boolean; cita?: EventoCalendario }>({ isOpen: false });
+
+  // Scroll hasta la primera cita del dia visible (o 08:00 si no hay ninguna)
+  const scrollToTime = useMemo(() => {
+    if (vista !== Views.DAY) return new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate(), 8, 0, 0);
+    const citasDelDia = dataRaw.filter(c => {
+      const d = c.fecha.toString().split('T')[0];
+      const fechaStr = format(fecha, 'yyyy-MM-dd');
+      return d === fechaStr;
+    });
+    if (citasDelDia.length === 0) return new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate(), 8, 0, 0);
+    const horaMin = citasDelDia.reduce((min, c) => {
+      const [h, m] = c.horario.split(':').map(Number);
+      return h * 60 + m < min ? h * 60 + m : min;
+    }, Infinity);
+    const h = Math.floor(horaMin / 60);
+    const m = horaMin % 60;
+    // Scroll un poco antes para dar contexto visual
+    return new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate(), Math.max(0, h - 1), m, 0);
+  }, [fecha, vista, dataRaw]);
 
   const abrirModalNuevaCita = (fechaPreseleccionada?: Date) => {
     setModalNuevaCita({ isOpen: true, fecha: fechaPreseleccionada });
@@ -839,8 +859,9 @@ const Calendario = () => {
           date={fecha}
           onNavigate={setFecha}
           culture='es'
-          min={new Date(2026, 0, 1, 12, 0, 0)}
+          min={new Date(2026, 0, 1, 8, 0, 0)}
           max={new Date(2026, 0, 1, 20, 0, 0)}
+          scrollToTime={scrollToTime}
           components={{
             event: vista === Views.MONTH ? CustomEventMonth : CustomEventDay,
             toolbar: (props) => (
