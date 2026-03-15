@@ -24,6 +24,8 @@ export default function ConfiguracionBot() {
     const [mensajeBienvenida, setMensajeBienvenida] = useState('');
     const [mensajeConfirmacion, setMensajeConfirmacion] = useState('');
     const [servicios, setServicios] = useState<Servicio[]>([]);
+    const [cobrarAdelanto, setCobrarAdelanto] = useState(true);
+    const [porcentajeAdelanto, setPorcentajeAdelanto] = useState(50);
     // texto libre por dia: "09:00, 11:00, 14:30"
     const [horariosTexto, setHorariosTexto] = useState<Record<string, string>>({
         lunes: '', martes: '', miercoles: '', jueves: '', viernes: '', sabado: '', domingo: '',
@@ -36,6 +38,8 @@ export default function ConfiguracionBot() {
                 setMensajeBienvenida(cfg.mensajeBienvenida);
                 setMensajeConfirmacion(cfg.mensajeConfirmacion);
                 setServicios(Array.isArray(cfg.servicios) ? cfg.servicios : []);
+                setCobrarAdelanto(cfg.cobrarAdelanto);
+                setPorcentajeAdelanto(cfg.porcentajeAdelanto);
                 const texto: Record<string, string> = {};
                 DIAS.forEach(d => { texto[d] = ((cfg.horarios as Horarios)[d] ?? []).join(', '); });
                 setHorariosTexto(texto);
@@ -57,7 +61,7 @@ export default function ConfiguracionBot() {
         setSaving(true);
         setError(null);
         try {
-            await api.updateConfiguracion({ trigger, mensajeBienvenida, mensajeConfirmacion, servicios, horarios });
+            await api.updateConfiguracion({ trigger, mensajeBienvenida, mensajeConfirmacion, servicios, horarios, cobrarAdelanto, porcentajeAdelanto });
             setSaved(true);
             setTimeout(() => setSaved(false), 2500);
         } catch (e: any) {
@@ -143,17 +147,65 @@ export default function ConfiguracionBot() {
                         />
                         <p className="text-xs text-gray-400 mt-1.5">Se envia al activar el bot. Luego pide el nombre del cliente.</p>
                     </div>
-                    <div>
-                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
-                            Mensaje de confirmacion de pago
-                        </label>
-                        <textarea
-                            value={mensajeConfirmacion}
-                            onChange={e => setMensajeConfirmacion(e.target.value)}
-                            rows={3}
-                            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 transition-all resize-none"
-                        />
-                        <p className="text-xs text-gray-400 mt-1.5">Se envia cuando el cliente sube el comprobante de pago.</p>
+                    {/* ── Pago ── */}
+                    <div className="border border-gray-100 rounded-xl p-4 space-y-4">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Cobro de adelanto</p>
+
+                        {/* Toggle */}
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm font-medium text-gray-800">Requerir adelanto de pago</p>
+                                <p className="text-xs text-gray-400 mt-0.5">
+                                    {cobrarAdelanto
+                                        ? 'El bot pedira comprobante antes de confirmar la cita'
+                                        : 'La cita se confirma automaticamente sin pago previo'}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setCobrarAdelanto(v => !v)}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none ${cobrarAdelanto ? 'bg-indigo-500' : 'bg-gray-200'}`}
+                            >
+                                <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform duration-200 ${cobrarAdelanto ? 'translate-x-6' : 'translate-x-1'}`} />
+                            </button>
+                        </div>
+
+                        {/* Campos visibles solo cuando cobrarAdelanto = true */}
+                        {cobrarAdelanto && (
+                            <>
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                                        Porcentaje de adelanto
+                                    </label>
+                                    <div className="flex items-center gap-3">
+                                        <input
+                                            type="number"
+                                            min={1}
+                                            max={100}
+                                            value={porcentajeAdelanto}
+                                            onChange={e => setPorcentajeAdelanto(Math.min(100, Math.max(1, Number(e.target.value))))}
+                                            className="w-24 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 transition-all text-center font-mono"
+                                        />
+                                        <span className="text-sm text-gray-500">% del precio del servicio</span>
+                                    </div>
+                                    <p className="text-xs text-gray-400 mt-1.5">
+                                        Ej: si el servicio cuesta $100 y el adelanto es 30%, el cliente paga $30 primero.
+                                    </p>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                                        Mensaje al recibir el comprobante
+                                    </label>
+                                    <textarea
+                                        value={mensajeConfirmacion}
+                                        onChange={e => setMensajeConfirmacion(e.target.value)}
+                                        rows={3}
+                                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 transition-all resize-none"
+                                    />
+                                    <p className="text-xs text-gray-400 mt-1.5">Se envia al cliente cuando sube el comprobante de pago.</p>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             )}

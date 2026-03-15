@@ -351,6 +351,8 @@ export const api = {
       mensajeConfirmacion: string;
       servicios: { nombre: string; precio: number }[];
       horarios: Record<string, string[]>;
+      cobrarAdelanto: boolean;
+      porcentajeAdelanto: number;
     }>;
   },
 
@@ -360,6 +362,8 @@ export const api = {
     mensajeConfirmacion?: string;
     servicios?: { nombre: string; precio: number }[];
     horarios?: Record<string, string[]>;
+    cobrarAdelanto?: boolean;
+    porcentajeAdelanto?: number;
   }) => {
     const res = await fetch(`${API_URL}/configuracion`, {
       method: 'PATCH',
